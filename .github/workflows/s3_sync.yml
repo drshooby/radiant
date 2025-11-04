@@ -35,8 +35,8 @@ jobs:
           bun i
           bun run build
 
-      - name: Upload QA Artifacts to S3
+      - name: Upload to S3
         run: |
           cd ../scripts
           chmod +x s3.sh
-          ./s3.sh "cloud-final-$(date +%s)" ../next-app/out
+          ./s3.sh "${{ secrets.S3_BUCKET_NAME }}" ../next-app/out
