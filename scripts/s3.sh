@@ -4,7 +4,6 @@ set -euo pipefail
 
 BUCKET_NAME="$1"
 SOURCE_DIR="$2"
-DEST_PREFIX="${3:-src}"
 
 if [[ -z "$BUCKET_NAME" ]]; then
   echo "Bucket name is empty!"
@@ -31,13 +30,8 @@ if [ ! -d "$SOURCE_DIR" ]; then
   exit 1
 fi
 
-if [[ ! "$DEST_PREFIX" =~ ^[a-zA-Z0-9_\-]+$ ]]; then
-  echo "Destination prefix '$DEST_PREFIX' contains invalid characters."
-  exit 1
-fi
+echo "Uploading all files from '$SOURCE_DIR/' to s3://$BUCKET_NAME/"
 
-echo "Uploading all files from '$SOURCE_DIR/' to s3://$BUCKET_NAME/$DEST_PREFIX/"
-
-aws s3 sync "$SOURCE_DIR" "s3://$BUCKET_NAME/$DEST_PREFIX/" --delete
+aws s3 sync "$SOURCE_DIR" "s3://$BUCKET_NAME/" --delete
 
 echo "Upload complete."
