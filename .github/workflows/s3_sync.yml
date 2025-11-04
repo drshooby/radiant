@@ -1,0 +1,42 @@
+name: Sync S3
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-to-qa:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./next-app
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-east-1
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.16
+      
+      - name: Export Static Site
+        run: |
+          bun i
+          bun run build
+
+      - name: Upload QA Artifacts to S3
+        run: |
+          cd ../scripts
+          chmod +x s3.sh
+          ./s3.sh "cloud-final-$(date +%s)" ../next-app/out
