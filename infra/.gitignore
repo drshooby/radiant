@@ -1,0 +1,28 @@
+# Terraform state files
+*.tfstate
+*.tfstate.*backup
+
+# Terraform local configuration and modules
+.terraform/
+.terraformrc
+terraform.rc
+
+# Terraform variable files (often contain sensitive data)
+*.tfvars
+*.tfvars.json
+
+# Terraform plan output files
+*.tfplan
+
+# Terraform override files (if not intended for version control)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Operating system specific files (e.g., macOS)
+.DS_Store
