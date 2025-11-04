@@ -39,4 +39,4 @@ jobs:
         run: |
           cd ../scripts
           chmod +x s3.sh
-          ./s3.sh "${{ secrets.S3_BUCKET_NAME }}" ../next-app/out
+          ./s3.sh "cloud-final-serverless" ../next-app/out
