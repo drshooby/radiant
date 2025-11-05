@@ -10,11 +10,6 @@ if [[ -z "$BUCKET_NAME" ]]; then
   exit 1
 fi
 
-if [[ ! "$BUCKET_NAME" =~ ^[a-z0-9]([a-z0-9\-]{1,61}[a-z0-9])?$ ]]; then
-  echo "Invalid bucket name! Must be 3-63 chars, lowercase letters/numbers/hyphens, start and end with letter/number."
-  exit 1
-fi
-
 if ! aws s3 ls "s3://$BUCKET_NAME" >/dev/null 2>&1; then
   echo "Bucket '$BUCKET_NAME' does not exist or you do not have access."
   exit 1
