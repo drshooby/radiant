@@ -36,5 +36,5 @@ variable "private_subnet_cidrs" {
 
 variable "s3_bucket_name" {
   type    = string
-  default = "cloud-final-serverless"
+  default = "brutus.ettukube.com"
 }

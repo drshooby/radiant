@@ -44,6 +44,10 @@ resource "aws_s3_bucket_website_configuration" "cloud_final_bucket" {
 
 resource "aws_s3_bucket_policy" "public_read" {
   bucket = aws_s3_bucket.cloud_final_bucket.id
+  depends_on = [
+    aws_s3_bucket_public_access_block.cloud_final_bucket
+  ]
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
