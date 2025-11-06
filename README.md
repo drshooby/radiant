@@ -5,7 +5,7 @@ This project is for my Cloud Computing final with the following requirements:
 ## Project Overview
 This project is a full-fledged AI Single Page Application (SPA) built with serverless architecture and cloud infrastructure. It demonstrates best practices in modern cloud deployment, security, and AI integration.
 
-## Requirements Implemented
+## Requirements
 - **Static Page**: Served via cloud storage (S3) as the frontend SPA.  
 - **API Backend**: AWS API Gateway routing to Lambda functions to process REST endpoints (no GraphQL used).  
 - **Authentication**: Implemented with Amazon Cognito, supporting username/password login plus one OAuth provider.  
@@ -44,3 +44,4 @@ NEXT_PUBLIC_COGNITO_REDIRECT_URI=
 
 ### Notes
 - All authentication configuration currently uses client-side env vars; may consider Lambda-based config fetch for future security hygiene.
+
