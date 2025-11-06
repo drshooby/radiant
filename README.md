@@ -25,3 +25,22 @@ NEXT_PUBLIC_COGNITO_DOMAIN=
 NEXT_PUBLIC_COGNITO_REDIRECT_URI=
 ```
 
+
+## Project Status & Next Steps
+
+### Completed
+- **Static Page**: SPA served via S3.  
+- **Authentication**: Username/password login via Amazon Cognito fully implemented.  
+- **DNS & CDN**: Custom domain set up with Cloudflare, SSL/HTTPS enforced.
+- **DDOS Protection**: Just turn on `under attack` mode.  
+
+### In Progress / To Do
+- [ ] **OAuth Provider**: Integrate at least one external OAuth provider (e.g., GitHub) with Cognito.  
+- [ ] **Database**: Connect and configure cloud-hosted RDBMS for persistent storage.  
+- [ ] **Backend API**: Implement Lambda functions behind API Gateway to handle REST endpoints.  
+- [ ] **AI Integration**: Connect SPA/backend to external ML API for approved project functionality.  
+- [ ] **Security Enhancements**:  
+  - [ ] Explore Cloudflare Turnstile for bot protection.  
+
+### Notes
+- All authentication configuration currently uses client-side env vars; may consider Lambda-based config fetch for future security hygiene.
