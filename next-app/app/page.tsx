@@ -2,22 +2,21 @@
 
 import { useAuth } from "react-oidc-context";
 import { useEffect, useCallback } from "react";
-import { cognitoLogoutConfig } from "@/app/auth/auth.config";
+import { useCognitoConfig } from "@/app/auth/CognitoConfigContext";
 
 export default function Home() {
   const auth = useAuth();
+  const { config, loading } = useCognitoConfig();
 
-  // Handles automatic sign-in redirect if not authenticated
+  // Redirect to login if not authenticated
   const redirectToLogin = useCallback(() => {
     if (!auth.isAuthenticated && !auth.isLoading && !auth.activeNavigator) {
       auth.signinRedirect();
     }
   }, [auth]);
 
-  // Runs once on mount or when auth state changes
   useEffect(() => {
     const justLoggedOut = sessionStorage.getItem("logging_out");
-
     if (justLoggedOut) {
       sessionStorage.removeItem("logging_out");
     } else {
@@ -25,33 +24,31 @@ export default function Home() {
     }
   }, [redirectToLogin]);
 
-  // Handles logout flow
+  // Logout handler using dynamic config
   const signOut = async () => {
+    if (!config) return;
+
     sessionStorage.setItem("logging_out", "true");
     await auth.removeUser();
 
-    const { domain, clientId, redirect_uri, response_type, scope } =
-      cognitoLogoutConfig;
+    const logoutUrl = new URL(`${config.domain}/logout`);
+    logoutUrl.searchParams.set("response_type", config.response_type);
+    logoutUrl.searchParams.set("client_id", config.client_id);
+    logoutUrl.searchParams.set("redirect_uri", config.redirect_uri);
+    logoutUrl.searchParams.set("scope", config.scopes);
 
-    const params = new URLSearchParams({
-      response_type: response_type,
-      client_id: clientId,
-      redirect_uri: redirect_uri,
-      scope,
-    });
-
-    window.location.href = `${domain}/logout?${params.toString()}`;
+    window.location.href = logoutUrl.toString();
   };
 
-  if (auth.isLoading) return <div>Loading...</div>;
+  if (loading || auth.isLoading) return <div>Loading...</div>;
   if (auth.error) return <div>Oops... {auth.error.message}</div>;
   if (!auth.isAuthenticated)
     return <div>You have been signed out. Redirecting to sign in...</div>;
 
   return (
     <div>
-      <h1>Hi... {auth.user?.profile.email}</h1>
-      <button onClick={signOut}>Sign out?</button>
+      <h1>Hi, {auth.user?.profile.email}</h1>
+      <button onClick={signOut}>Sign out</button>
 
       <hr />
 
