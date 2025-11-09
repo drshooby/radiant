@@ -26,3 +26,6 @@ crash.*.log
 
 # Operating system specific files (e.g., macOS)
 .DS_Store
+
+# Lambda
+*.zip
