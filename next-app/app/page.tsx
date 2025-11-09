@@ -3,6 +3,7 @@
 import { useAuth } from "react-oidc-context";
 import { useEffect, useCallback } from "react";
 import { useCognitoConfig } from "@/app/auth/CognitoConfigContext";
+import { Loading } from "@/app/components/Loading";
 
 export default function Home() {
   const auth = useAuth();
@@ -40,7 +41,7 @@ export default function Home() {
     window.location.href = logoutUrl.toString();
   };
 
-  if (loading || auth.isLoading) return <div>Loading...</div>;
+  if (loading || auth.isLoading) return <Loading />;
   if (auth.error) return <div>Oops... {auth.error.message}</div>;
   if (!auth.isAuthenticated)
     return <div>You have been signed out. Redirecting to sign in...</div>;

@@ -6,6 +6,7 @@ import {
   CognitoConfigProvider,
   useCognitoConfig,
 } from "./CognitoConfigContext";
+import { Loading } from "@/app/components/Loading";
 
 // Top-level wrapper
 export const AuthConfigProvider = ({ children }: { children: ReactNode }) => {
@@ -20,7 +21,7 @@ export const AuthConfigProvider = ({ children }: { children: ReactNode }) => {
 const InnerAuthProvider = ({ children }: { children: ReactNode }) => {
   const { config, loading } = useCognitoConfig();
 
-  if (loading || !config) return <div>Loading auth config...</div>;
+  if (loading || !config) return <Loading />;
 
   return <AuthProvider {...config}>{children}</AuthProvider>;
 };
