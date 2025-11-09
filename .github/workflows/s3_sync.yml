@@ -30,6 +30,12 @@ jobs:
         with:
           bun-version: 1.2.16
       
+      - name: Add API Gateway Identifier
+        run: |
+          cd app/auth
+          sed -i "s|PLACEHOLDER_URL|${{ secrets.API_GATEWAY_URL }}|g" auth-details.ts
+          grep -q "${{ secrets.API_GATEWAY_URL }}" auth-details.ts && echo "URL replaced successfully!" || exit 1
+      
       - name: Export Static Site
         run: |
           bun i
