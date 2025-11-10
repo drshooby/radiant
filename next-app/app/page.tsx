@@ -47,7 +47,7 @@ export default function Home() {
 
   return (
     <div>
-      <h1>Hi, {auth.user?.profile.given_name}</h1>
+      <h1>Hi, {auth.user?.profile.name}</h1>
       <button onClick={signOut}>Sign out</button>
 
       <hr />
