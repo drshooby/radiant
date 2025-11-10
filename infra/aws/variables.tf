@@ -38,3 +38,11 @@ variable "s3_bucket_name" {
   type    = string
   default = "brutus.ettukube.com"
 }
+
+variable "google_auth_client_id" {
+  type = string
+}
+
+variable "google_auth_client_secret" {
+  type = string
+}

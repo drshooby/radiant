@@ -16,7 +16,7 @@ resource "aws_cognito_user_pool" "cognito_pool" {
     name                     = "email"
     attribute_data_type      = "String"
     developer_only_attribute = false
-    mutable                  = false
+    mutable                  = false #true
     required                 = true
   }
 
@@ -32,6 +32,9 @@ resource "aws_cognito_user_pool" "cognito_pool" {
   }
 }
 
+// FOR GOOGLE: JS Origins - [Cognito Domain], redirect URIs - [Cognito Domain] + /oauth2/idpresponse.
+// might take a couple minutes
+
 resource "aws_cognito_user_pool_client" "cognito_pool_client" {
   name                                 = "nextapp-cognito-client"
   user_pool_id                         = aws_cognito_user_pool.cognito_pool.id
@@ -43,7 +46,27 @@ resource "aws_cognito_user_pool_client" "cognito_pool_client" {
     "https://brutus.ettukube.com",
     "http://localhost:3000"
   ]
-  supported_identity_providers = ["COGNITO"]
+  supported_identity_providers = ["COGNITO", "Google"]
+
+  # write_attributes = ["email"]
+  depends_on = [aws_cognito_identity_provider.google_provider]
+}
+
+resource "aws_cognito_identity_provider" "google_provider" {
+  user_pool_id  = aws_cognito_user_pool.cognito_pool.id
+  provider_name = "Google"
+  provider_type = "Google"
+
+  provider_details = {
+    authorize_scopes = "email"
+    client_id        = var.google_auth_client_id
+    client_secret    = var.google_auth_client_secret
+  }
+
+  attribute_mapping = {
+    email    = "email"
+    username = "sub" # for stability use "sub"
+  }
 }
 
 resource "aws_cognito_user_pool_domain" "cognito_pool_domain" {
