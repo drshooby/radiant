@@ -57,7 +57,9 @@ export default function Home() {
   return (
     <div>
       <h1>
-        Hi, {auth.user?.profile["nickname"] || auth.user?.profile["email"]}
+        Hi,{" "}
+        {auth.user?.profile["nickname"] ||
+          (auth.user?.profile["cognito:username"] as string)}
       </h1>
       <button onClick={signOut}>Sign out</button>
 
