@@ -8,7 +8,7 @@ export interface CognitoSettings {
   gateway_url: string
 }
 
-const SCOPES = "email openid";
+const SCOPES = "email openid profile";
 const RESPONSE_TYPE = "code";
 
 let cachedConfig: CognitoSettings | null = null;
