@@ -16,8 +16,12 @@ resource "aws_cognito_user_pool" "cognito_pool" {
     name                     = "email"
     attribute_data_type      = "String"
     developer_only_attribute = false
-    mutable                  = false #true
+    mutable                  = true
     required                 = true
+  }
+
+  username_configuration {
+    case_sensitive = false
   }
 
   password_policy {
@@ -26,10 +30,13 @@ resource "aws_cognito_user_pool" "cognito_pool" {
     require_symbols   = true
   }
 
+  alias_attributes         = ["email"]
   auto_verified_attributes = ["email"]
+
   email_configuration {
     email_sending_account = "COGNITO_DEFAULT"
   }
+
 }
 
 // FOR GOOGLE: JS Origins - [Cognito Domain], redirect URIs - [Cognito Domain] + /oauth2/idpresponse.
@@ -41,15 +48,16 @@ resource "aws_cognito_user_pool_client" "cognito_pool_client" {
   generate_secret                      = false
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows                  = ["code"]
-  allowed_oauth_scopes                 = ["openid", "email"]
+  allowed_oauth_scopes                 = ["openid", "email", "profile"]
   callback_urls = [
     "https://brutus.ettukube.com",
     "http://localhost:3000"
   ]
   supported_identity_providers = ["COGNITO", "Google"]
 
-  # write_attributes = ["email"]
-  depends_on = [aws_cognito_identity_provider.google_provider]
+  depends_on                    = [aws_cognito_identity_provider.google_provider]
+  read_attributes               = ["email", "nickname", "preferred_username"]
+  prevent_user_existence_errors = "ENABLED"
 }
 
 resource "aws_cognito_identity_provider" "google_provider" {
@@ -58,14 +66,14 @@ resource "aws_cognito_identity_provider" "google_provider" {
   provider_type = "Google"
 
   provider_details = {
-    authorize_scopes = "email"
+    authorize_scopes = "openid email profile"
     client_id        = var.google_auth_client_id
     client_secret    = var.google_auth_client_secret
   }
 
   attribute_mapping = {
     email    = "email"
-    username = "sub" # for stability use "sub"
+    nickname = "name"
   }
 }
 
