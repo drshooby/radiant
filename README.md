@@ -51,6 +51,8 @@ https://<your-cognito-domain>.auth.<region>.amazoncognito.com
 https://<your-cognito-domain>.auth.<region>.amazoncognito.com/oauth2/idpresponse
 ```
 
+> **NOTE**: The main uri for the two previous steps can be found in the `cognito_pool_domain` output of Terraform.
+
 6. Note down the generated `Client ID` and `Client Secret`.
 
 7. In this repository, navigate to `infra/aws` and create a `terraform.tfvars` file containing:
@@ -60,7 +62,7 @@ google_auth_client_id     = "YOUR CLIENT ID"
 google_auth_client_secret = "YOUR CLIENT SECRET"
 ```
 
-Once done, you can deploy the Terraform infrastructure and Google sign-in will be enabled.
+Once done, Google sign-in will be enabled in the Cognito UI.
 
 ## Project Status & Next Steps
 
