@@ -1,5 +1,13 @@
 import styles from "./SignOutButton.module.css";
 
-export function SignOutButton() {
-  return <button className={styles.button}>Sign Out</button>;
+interface SignOutButtonProps {
+  onClick: () => void;
+}
+
+export function SignOutButton({ onClick }: SignOutButtonProps) {
+  return (
+    <button className={styles.button} onClick={onClick}>
+      Sign Out
+    </button>
+  );
 }

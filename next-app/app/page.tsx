@@ -55,5 +55,11 @@ export default function Home() {
   if (auth.error) return <div>Oops... {auth.error.message}</div>;
   if (!auth.isAuthenticated) return <Loading message="Signing you out" />;
 
-  return <HomePage />;
+  const username =
+    auth.user?.profile["nickname"] ||
+    (auth.user?.profile["cognito:username"] as string) ||
+    "Agent";
+  const email = auth.user?.profile.email as string;
+
+  return <HomePage username={username} email={email} onSignOut={signOut} />;
 }

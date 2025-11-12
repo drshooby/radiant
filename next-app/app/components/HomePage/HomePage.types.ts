@@ -5,11 +5,13 @@ export interface Montage {
   url: string;
 }
 
-export interface HomePageProps {
-  username?: string;
-}
-
 export interface VideoPlayerProps {
   videoUrl: string | null;
   loading: boolean;
+}
+
+export interface HomePageProps {
+  username: string;
+  email: string;
+  onSignOut: () => void;
 }

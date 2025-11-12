@@ -7,7 +7,7 @@ import { SignOutButton } from "@/app/components/SignOutButton";
 import { VideoLoading } from "@/app/components/VideoLoading";
 import { uploadToS3, processMontage } from "@/app/functions";
 
-export function HomePage({ username = "Agent" }: HomePageProps) {
+export function HomePage({ username, email, onSignOut }: HomePageProps) {
   const [showUpload, setShowUpload] = useState<boolean>(true);
   const [currentVideo, setCurrentVideo] = useState<string | null>(null);
   const [processing, setProcessing] = useState<boolean>(false);
@@ -94,9 +94,11 @@ export function HomePage({ username = "Agent" }: HomePageProps) {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div className={styles.greeting}>Hi, {username}</div>
+        <div className={styles.greeting}>
+          Hi, {username}, {email}
+        </div>
         <h1 className={styles.logo}>radiant</h1>
-        <SignOutButton />
+        <SignOutButton onClick={onSignOut} />
       </header>
 
       <main className={styles.mainContent}>
