@@ -1,0 +1,14 @@
+.button {
+  background: transparent;
+  border: 2px solid var(--charcoal);
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.2s ease-in-out;
+  color: var(--charcoal);
+}
+
+.button:hover {
+  border: 2px solid var(--yellow);
+}
