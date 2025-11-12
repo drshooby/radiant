@@ -98,7 +98,9 @@ export function HomePage({ username, email, onSignOut }: HomePageProps) {
           Hi, {username}, {email}
         </div>
         <h1 className={styles.logo}>radiant</h1>
-        <SignOutButton onClick={onSignOut} />
+        <div className={styles.signOutSection}>
+          <SignOutButton onClick={onSignOut} />
+        </div>
       </header>
 
       <main className={styles.mainContent}>

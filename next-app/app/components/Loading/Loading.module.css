@@ -11,13 +11,13 @@
   flex-direction: column; /* stack text above loader */
   align-items: center;    /* center horizontally */
   gap: 12px;              /* spacing between text and loader */
-  font-size: 24px;
-  font-family: monospace;
-  font-weight: bold;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
 }
 
 .loader {
-  width: 50px;
+  width: 40px;
   aspect-ratio: 1;
   border-radius: 50%;
   border: 8px solid;
