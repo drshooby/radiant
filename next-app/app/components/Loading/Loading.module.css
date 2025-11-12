@@ -18,11 +18,11 @@
 
 /* loader under the text, slightly smaller */
 .loader {
-  width: 30px;            /* smaller than before */
+  width: 30px;
   aspect-ratio: 1;
   border-radius: 50%;
   border: 5px solid;
-  border-color: #000 #0000;
+  border-color: var(--charcoal) var(--yellow);
   animation: l1 1s infinite linear;
 }
 
