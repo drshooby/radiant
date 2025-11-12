@@ -22,7 +22,7 @@
   aspect-ratio: 1;
   border-radius: 50%;
   border: 5px solid;
-  border-color: var(--charcoal) var(--charcoal);
+  border-color: var(--charcoal);
   animation: l1 1s infinite;
 }
 
