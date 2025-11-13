@@ -70,7 +70,7 @@ export default function Home() {
     <HomePage
       username={username}
       email={email}
-      bucketURL={config?.upload_bucket as string}
+      gatewayURI={config?.gateway_url as string}
       onSignOut={signOut}
     />
   );

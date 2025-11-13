@@ -1,9 +1,7 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-
 export interface UploadToS3Params {
   file: File;
   userEmail: string;
-  bucket: string
+  gatewayURI: string;
 }
 
 export interface UploadToS3Response {
@@ -13,19 +11,43 @@ export interface UploadToS3Response {
   error?: string;
 }
 
-export async function uploadToS3({ file, userEmail, bucket }: UploadToS3Params): Promise<UploadToS3Response> {
-  const s3Client = new S3Client({
-    region: "us-east-1",
-  });
+export async function uploadToS3({ file, userEmail, gatewayURI }: UploadToS3Params): Promise<UploadToS3Response> {
+  try {
+    const response = await fetch(`${gatewayURI}/api/get-upload-url`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userEmail: userEmail,
+        fileName: file.name,
+        contentType: file.type
+      })
+    });
 
-  const s3Url = `https://your-bucket.s3.amazonaws.com/${s3Key}`;
+    const { presignedUrl, s3Key, s3Url } = await response.json();
 
-  const s3Key = `${userEmail}/${Date.now()}-${file.name}`;
-  
-  return {
+    await fetch(presignedUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type
+      }
+    });
+
+    return {
+      success: true,
+      s3Key: s3Key,
+      s3Url: s3Url,
+      error: undefined
+    };
+  } catch (error) {
+    console.error("Upload error:", error);
+    return {
       success: false,
       s3Key: '',
       s3Url: '',
-      error: "fail",
+      error: error instanceof Error ? error.message : "Upload failed"
     };
+  }
 }

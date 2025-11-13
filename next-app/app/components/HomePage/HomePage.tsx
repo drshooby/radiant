@@ -10,7 +10,7 @@ import { uploadToS3 } from "@/app/functions";
 export function HomePage({
   username,
   email,
-  bucketURL,
+  gatewayURI,
   onSignOut,
 }: HomePageProps) {
   const [showUpload, setShowUpload] = useState<boolean>(true);
@@ -55,7 +55,7 @@ export function HomePage({
       const uploadResult = await uploadToS3({
         file,
         userEmail: email,
-        bucket: bucketURL,
+        gatewayURI,
       });
 
       if (!uploadResult.success) {
