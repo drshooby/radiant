@@ -46,3 +46,14 @@ variable "google_auth_client_id" {
 variable "google_auth_client_secret" {
   type = string
 }
+
+variable "api_endpoints" {
+  description = "API Gateway endpoint configurations"
+  type = map(object({
+    path_part   = string
+    methods     = list(string)
+    lambda_arn  = string
+    lambda_name = string
+  }))
+  default = {}
+}
