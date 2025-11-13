@@ -97,8 +97,12 @@ resource "aws_api_gateway_integration" "options_integrations" {
   type        = "MOCK"
 
   request_templates = {
-    "application/json" = "{\"statusCode\": 200}"
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
   }
+
+  passthrough_behavior = "WHEN_NO_MATCH"
 }
 
 # OPTIONS method responses
@@ -121,20 +125,29 @@ resource "aws_api_gateway_method_response" "options_responses" {
   }
 }
 
-# OPTIONS integration responses
+# OPTIONS integration response
 resource "aws_api_gateway_integration_response" "options_integration_responses" {
   for_each = local.api_endpoints
 
   rest_api_id = aws_api_gateway_rest_api.app_api.id
   resource_id = aws_api_gateway_resource.endpoints[each.key].id
   http_method = aws_api_gateway_method.options_methods[each.key].http_method
-  status_code = aws_api_gateway_method_response.options_responses[each.key].status_code
+  status_code = "200"
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'${join(",", concat(each.value.methods, ["OPTIONS"]))}'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
+
+  response_templates = {
+    "application/json" = ""
+  }
+
+  depends_on = [
+    aws_api_gateway_method_response.options_responses,
+    aws_api_gateway_integration.options_integrations
+  ]
 }
 
 # Lambda permissions
@@ -156,10 +169,35 @@ resource "aws_api_gateway_deployment" "api" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.app_api.id
+
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_resource.endpoints,
+      aws_api_gateway_method.endpoint_methods,
+      aws_api_gateway_integration.endpoint_integrations,
+      aws_api_gateway_method.options_methods,
+      aws_api_gateway_integration.options_integrations,
+    ]))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_stage" "stage" {
   stage_name    = "prod"
   deployment_id = aws_api_gateway_deployment.api.id
   rest_api_id   = aws_api_gateway_rest_api.app_api.id
+}
+
+resource "aws_api_gateway_method_settings" "all" {
+  rest_api_id = aws_api_gateway_rest_api.app_api.id
+  stage_name  = aws_api_gateway_stage.stage.stage_name
+  method_path = "*/*"
+
+  settings {
+    throttling_burst_limit = 100
+    throttling_rate_limit  = 50
+  }
 }

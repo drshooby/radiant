@@ -1,3 +1,5 @@
+// For the app hosting bucket
+
 resource "aws_s3_bucket" "cloud_final_bucket" {
   bucket        = var.s3_bucket_name
   force_destroy = true
@@ -59,4 +61,36 @@ resource "aws_s3_bucket_policy" "public_read" {
       }
     ]
   })
+}
+
+// For upload bucket
+
+resource "random_id" "upload_bucket_suffix" {
+  byte_length = 4
+}
+
+resource "aws_s3_bucket" "upload_bucket" {
+  bucket        = "radiant-${random_id.upload_bucket_suffix.hex}"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_cors_configuration" "upload_bucket_cors" {
+  bucket = aws_s3_bucket.upload_bucket.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = ["https://brutus.ettukube.com"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "upload_bucket_access" {
+  bucket = aws_s3_bucket.upload_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
