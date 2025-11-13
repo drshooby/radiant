@@ -83,7 +83,7 @@ Once done, Google sign-in will be enabled in the Cognito UI.
 
 ### Notes
 
-- Run `aws secretsmanager delete-secret --secret-id cognito-config --force-delete-without-recovery` between `terraform destroy` and `terraform apply` because AWS doesn't want you accidentally deleting your secrets (although in this case it's intentional).
+- Run `aws secretsmanager delete-secret --secret-id app-config --force-delete-without-recovery` between `terraform destroy` and `terraform apply` because AWS doesn't want you accidentally deleting your secrets (although in this case it's intentional).
 
 ## Proposed API Endpoints & Lambda Flow (AI Comments)
 
