@@ -4,32 +4,22 @@
 }
 
 .header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   margin-bottom: 3rem;
   padding-bottom: 1.5rem;
   border-bottom: 2px solid var(--light-gray);
-  position: relative;
-}
-
-@media (max-width: 768px) {
-  .greeting {
-    display: none;
-  }
-  .header {
-    flex-direction: column;
-  }
+  gap: 1rem;
 }
 
 .greeting {
   font-size: 1.1rem;
   color: var(--charcoal);
-  max-width: 200px;
   word-wrap: break-word;
   overflow-wrap: break-word;
   word-break: break-word;
-  flex: 1;
+  justify-self: start;
 }
 
 .logo {
@@ -38,9 +28,32 @@
   color: var(--charcoal);
   letter-spacing: 2px;
   text-transform: uppercase;
+  justify-self: center;
+  position: relative;
+}
+
+.logo::before {
+  content: 'radiant';
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
+  background: linear-gradient(90deg, #FFD93D, #FFC700, #FFED4E, #FFB700, #FFD93D) -100% / 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  opacity: 0;
+  transition: opacity 0.7s ease-in-out;
+}
+
+.logo.processing::before {
+  opacity: 1;
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: 100%;
+  }
 }
 
 .logo::after {
@@ -56,9 +69,39 @@
 }
 
 .signOutSection {
-  flex: 1;
   display: flex;
   justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .header {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .greeting {
+    justify-self: center;
+    order: 2;
+  }
+  
+  .logo {
+    order: 1;
+  }
+  
+  .signOutSection {
+    order: 3;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    font-size: 2rem;
+  }
+  
+  .greeting {
+    font-size: 1rem;
+  }
 }
 
 .mainContent {

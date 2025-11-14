@@ -6,6 +6,8 @@ import { VideoPlayer } from "@/app/components/VideoPlayer";
 import { SignOutButton } from "@/app/components/SignOutButton";
 import { VideoLoading } from "@/app/components/VideoLoading";
 import { uploadToS3 } from "@/app/functions";
+import { Modal } from "@/app/components/Modal";
+import { ModalProps } from "@/app/components/Modal/Modal.types";
 
 export function HomePage({
   username,
@@ -18,7 +20,17 @@ export function HomePage({
   const [processing, setProcessing] = useState<boolean>(false);
   const [dragActive, setDragActive] = useState<boolean>(false);
 
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [modalData, setModalData] = useState<ModalProps | undefined>(undefined);
+
   // const previousMontages: Montage[] = [];
+
+  const handleFailModal = (errorDetails: ModalProps) => {
+    console.log("handleFailModal called with:", errorDetails);
+    setModalOpen(true);
+    setModalData(errorDetails);
+    console.log("Modal state updated");
+  };
 
   const handleDrag = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
@@ -43,12 +55,26 @@ export function HomePage({
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       handleFile(e.target.files[0]);
+      e.target.value = "";
     }
   };
 
   const handleFile = async (file: File) => {
-    console.log("File uploaded:", file.name);
-    setProcessing(true);
+    console.log("Attempting upload:", file.name);
+
+    const MAX_SIZE_MB = 25;
+    const fileSizeMB = file.size / (1024 * 1024);
+
+    if (fileSizeMB > MAX_SIZE_MB) {
+      const title = "File too large!";
+      const message = `(${fileSizeMB.toFixed(
+        1
+      )} MB). Please upload videos under ${MAX_SIZE_MB} MB (~20 seconds).`;
+      handleFailModal({ title, message });
+      return;
+    }
+
+    console.log("Beginning processing:");
 
     try {
       // Upload to S3
@@ -89,10 +115,10 @@ export function HomePage({
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div className={styles.greeting}>
-          Hi, {username}, {email}
-        </div>
-        <h1 className={styles.logo}>radiant</h1>
+        <div className={styles.greeting}>Hi, {username}</div>
+        <h1 className={`${styles.logo} ${processing ? styles.processing : ""}`}>
+          radiant
+        </h1>
         <div className={styles.signOutSection}>
           <SignOutButton onClick={onSignOut} />
         </div>
@@ -168,6 +194,16 @@ export function HomePage({
             ))}
           </div>
         </section> */}
+
+        {isModalOpen && modalData && (
+          <Modal
+            data={{ title: modalData.title, message: modalData.message }}
+            onClose={() => {
+              setModalOpen(false);
+              setModalData(undefined);
+            }}
+          />
+        )}
       </main>
     </div>
   );
