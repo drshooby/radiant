@@ -6,6 +6,10 @@ This project is for my Cloud Computing final with the following requirements:
 
 This project is a full-fledged AI Single Page Application (SPA) built with serverless architecture and cloud infrastructure. It demonstrates best practices in modern cloud deployment, security, and AI integration.
 
+## What Does It Do
+
+AI-powered Valorant montage maker using AWS services. Takes ~20-second gameplay clips, detects kills using Rekognition, and generates an edited montage with AI commentary.
+
 ## Requirements
 
 - **Static Page**: Served via cloud storage (S3) as the frontend SPA.
@@ -15,7 +19,7 @@ This project is a full-fledged AI Single Page Application (SPA) built with serve
 - **DNS & CDN**: Custom domain with Cloudflare for DNS, CDN caching, and SSL; HTTPS enforced.
 - **Security**: Protection against DDoS attacks and ReCaptcha integration via Cloudflare.
 - **AI Integration**: Connects to an external ML API (approved for use in this project).
-- **Constraints**: No AWS Amplify, Google Firebase, or other automatic SaaS/PaaS deployment tools.
+- **Service Constraints**: No AWS Amplify, Google Firebase, or other automatic SaaS/PaaS deployment tools.
 
 ## Local Dev
 
@@ -186,3 +190,5 @@ Lifecycle Policy: `Delete /processing/*` after 1 day
 - **Bedrock:** AI commentary generation
 - **Polly:** Text-to-speech for voiceover
 - **FFmpeg (Lambda Layer):** Video/audio processing
+
+> **NOTE:** This architecture is optimized for demonstration and cost management rather than production scale. For a production deployment serving thousands of concurrent users, the design would incorporate asynchronous processing with SQS, increased Lambda concurrency limits, WebSocket notifications, and additional caching layers.
