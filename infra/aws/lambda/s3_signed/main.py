@@ -21,7 +21,10 @@ def lambda_handler(event, context):
             Params={
                 'Bucket': bucket_name,
                 'Key': s3_key,
-                'ContentType': content_type
+                'ContentType': content_type,
+                'Metadata': {
+                    'user-email': user_email
+                }
             },
             ExpiresIn=300
         )
