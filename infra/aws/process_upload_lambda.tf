@@ -2,7 +2,7 @@
 data "archive_file" "process_upload_func_files" {
   type        = "zip"
   source_file = "${path.module}/lambda/process_upload/main.py"
-  output_path = "${path.module}/lambda/process_upload/process_upload.zip"
+  output_path = "${path.module}/lambda/process_upload/process_upload_func.zip"
 }
 
 # IAM role for Lambda

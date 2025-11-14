@@ -2,7 +2,7 @@
 data "archive_file" "s3_signed_func_files" {
   type        = "zip"
   source_file = "${path.module}/lambda/s3_signed/main.py"
-  output_path = "${path.module}/lambda/s3_signed/s3_signed.zip"
+  output_path = "${path.module}/lambda/s3_signed/s3_signed_func.zip"
 }
 
 # IAM role for Lambda
