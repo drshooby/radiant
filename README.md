@@ -64,217 +64,127 @@ google_auth_client_secret = "YOUR CLIENT SECRET"
 
 Once done, Google sign-in will be enabled in the Cognito UI.
 
-## Project Status & Next Steps
-
-### Completed
-
-- **Static Page**: SPA served via S3.
-- **Authentication**: Username/password + Google OAUTH 2.0 login via Amazon Cognito fully implemented.
-- **DNS & CDN**: Custom domain set up with Cloudflare, SSL/HTTPS enforced.
-- **DDOS Protection**: Just turn on `under attack` mode.
-
-### In Progress / To Do
-
-- [ ] **Database**: Connect and configure cloud-hosted RDBMS for persistent storage.
-- [ ] **Backend API**: Implement Lambda functions behind API Gateway to handle REST endpoints.
-- [ ] **AI Integration**: Connect SPA/backend to external ML API for approved project functionality.
-- [ ] **Security Enhancements**:
-  - [ ] Explore Cloudflare Turnstile for bot protection.
-
 ### Notes
 
 - Run `aws secretsmanager delete-secret --secret-id app-config --force-delete-without-recovery` between `terraform destroy` and `terraform apply` because AWS doesn't want you accidentally deleting your secrets (although in this case it's intentional).
 
-## Proposed API Endpoints & Lambda Flow (AI Comments)
+## Constraints
 
-### 1. **POST /upload** → `upload-handler` Lambda
+- Videos limited to 25MB (~20 seconds) for Lambda compatibility
+- Rekognition trained only on kills (submitter POV)
+- Intermediate files stored temporarily in S3
 
-- User uploads video from frontend
-- Lambda generates presigned S3 URL for upload
-- Returns presigned URL to client
-- Client uploads directly to S3 (bypasses API Gateway size limits)
-- S3 triggers next step via event notification
-
-### 2. **S3 Event → SQS → `video-processor-orchestrator` Lambda**
-
-- S3 upload completion triggers SQS message
-- Lambda receives message with S3 key
-- Creates job record in RDS (status: PROCESSING)
-- Kicks off Rekognition job
-- Returns job_id to track progress
-
-### 3. **Rekognition Completion → SNS → `rekognition-handler` Lambda**
-
-- Rekognition publishes to SNS when done
-- Lambda receives labels/timestamps
-- Runs merge interval logic to consolidate highlights
-- Creates highlight chunks list
-- Triggers MediaConvert job #1 (extract highlight clips)
-- Updates job status in RDS
-
-### 4. **MediaConvert Completion → EventBridge → `mediaconvert-chunks-handler` Lambda**
-
-- MediaConvert finishes extracting clips
-- Lambda gets S3 locations of chunks
-- Sends chunks metadata to Bedrock for commentary generation
-- Receives AI-generated commentary text
-- Triggers Polly to generate audio files
-- Stores audio S3 locations
-
-### 5. **Polly Completion → `polly-handler` Lambda**
-
-- Lambda receives Polly audio file locations
-- Prepares MediaConvert job #2 (stitch clips + overlay audio)
-- Kicks off final video assembly
-
-### 6. **MediaConvert Final → EventBridge → `final-video-handler` Lambda**
-
-- MediaConvert finishes final montage
-- Lambda updates RDS with final video S3 URL and thumbnail
-- Updates job status to COMPLETED
-- Optionally sends notification (could use WebSocket or polling)
-
-### 7. **GET /videos** → `get-videos` Lambda
-
-- Returns list of user's completed videos from RDS
-- Includes S3 URLs (presigned for security)
-- Returns thumbnails for preview
-
-### 8. **GET /video/:id** → `get-video-detail` Lambda
-
-- Returns specific video details
-- Generates presigned URL for video playback
-- Returns metadata (created_at, duration, etc.)
-
-### 9. **GET /job/:id** → `get-job-status` Lambda
-
-- Frontend polls this to check processing status
-- Returns current status and progress percentage if possible
-
----
-
-## Why SQS?
-
-Yes, you need SQS because:
-
-- **Decoupling**: S3 → SQS → Lambda prevents lost events if Lambda fails
-- **Retry logic**: Failed processing jobs automatically retry
-- **Rate limiting**: Prevents Lambda from getting overwhelmed with concurrent uploads
-- **Visibility timeout**: Ensures jobs don't get processed twice
-
-You might also want:
-
-- **DLQ (Dead Letter Queue)**: For failed jobs after max retries
-- **SNS for Rekognition/EventBridge for MediaConvert**: AWS services can publish completion events
-
----
-
-## Database Schema (PostgreSQL/MySQL on RDS)
-
-### `users` table
+### Architecture Flow
 
 ```
-user_id          UUID PRIMARY KEY
-cognito_sub      VARCHAR(255) UNIQUE NOT NULL
-email            VARCHAR(255)
-created_at       TIMESTAMP DEFAULT NOW()
+S3 Upload → EventBridge → Orchestrator Lambda
+                              ↓
+                         Step Functions
+                              ↓
+                    Start Rekognition Job
+                    (Custom Labels: kills)
+                              ↓
+                    Wait for Completion
+                    (Step Functions built-in wait)
+                              ↓
+                    Get Results + Merge Intervals
+                    (Lambda with merge logic)
+                              ↓
+                    Extract Clips in Parallel
+                    (Map state - one Lambda per clip)
+                    FFmpeg extracts clip segment
+                              ↓
+                    For each clip (parallel):
+                      - Bedrock: generate commentary
+                      - Polly: TTS
+                      - FFmpeg: overlay audio on clip
+                              ↓
+                    Concatenate Final Montage
+                    (Single Lambda - FFmpeg concat)
+                              ↓
+                    Save to S3 + RDS + Cleanup
 ```
 
-### `videos` table
+### Lambda Functions
+
+#### Lambda 1: Start Rekognition
+
+**Trigger:** EventBridge (S3 PutObject)
+**Purpose:** Initiate Rekognition video analysis
+
+- Input: S3 bucket + key from EventBridge event
+- Action: Start Rekognition Custom Labels job for kill detection
+- Output: JobId for tracking
+
+#### Lambda 2: Process Results
+
+**Purpose:** Extract and merge kill timestamps
+
+- Input: Rekognition JobId
+- Action:
+  - Fetch Rekognition results
+  - Merge overlapping timestamps with 2-second buffer (intro/outro context)
+  - Apply interval merging algorithm
+- Output: Array of clip intervals `[{start: 5.2, end: 9.5}, {start: 12.0, end: 15.8}]`
+
+#### Lambda 3: Extract & Enhance Clip (Parallel Execution)
+
+**Purpose:** Process individual clips with AI commentary - **FFmpeg Layer Required**
+
+- Input: Single clip interval + original video S3 path
+- Actions:
+  - Extract video segment using FFmpeg
+  - Generate commentary via Bedrock (e.g., "Great kill!")
+  - Convert commentary to speech via Polly
+  - Overlay audio on video using FFmpeg
+  - Save enhanced clip to S3
+- Output: S3 path of enhanced clip
+
+#### Lambda 4: Concatenate
+
+**Purpose:** Combine all clips into final montage - **FFmpeg Layer Required**
+
+- Input: List of S3 paths for enhanced clips
+- Action: FFmpeg concatenate all clips into single video
+- Output: Final montage S3 URL
+
+#### Lambda 5: Cleanup
+
+**Purpose:** Remove intermediate files and persist results to RDS
+
+- Input: Job ID, processing paths, final montage S3 URL
+- Actions:
+  - Delete all intermediate clips and audio files
+  - Extract random frame as thumbnail using FFmpeg
+  - Save to RDS:
+    - User email
+    - Original video S3 key
+    - Final montage S3 key
+    - Thumbnail S3 key
+    - Processing timestamp
+    - Metadata (kills found, clip count, duration), maybe
+- Output: Success status
+- Keep: Original video + final montage + thumbnail in S3
+
+### S3 Directory Structure
 
 ```
-video_id                UUID PRIMARY KEY
-user_id                 UUID REFERENCES users(user_id)
-original_video_s3_key   VARCHAR(500) NOT NULL
-final_video_s3_key      VARCHAR(500)
-thumbnail_s3_key        VARCHAR(500)
-status                  VARCHAR(50) NOT NULL  -- PROCESSING, COMPLETED, FAILED
-created_at              TIMESTAMP DEFAULT NOW()
-completed_at            TIMESTAMP
-duration_seconds        INTEGER
-error_message           TEXT
+/uploads/[email]/[timestamp]-original.mp4 # Original upload
+/processing/[job-id]/clip-1.mp4 # Intermediate clips
+/processing/[job-id]/clip-1-audio.mp3 # TTS audio
+/processing/[job-id]/clip-1-final.mp4 # Clip with audio overlay
+/montages/[email]/[timestamp]-montage.mp4 # Final output
 ```
 
-### `processing_jobs` table (optional but useful for debugging)
+Lifecycle Policy: `Delete /processing/*` after 1 day
 
-```
-job_id                  UUID PRIMARY KEY
-video_id                UUID REFERENCES videos(video_id)
-step                    VARCHAR(100)  -- REKOGNITION, MEDIACONVERT_CHUNKS, POLLY, MEDIACONVERT_FINAL
-status                  VARCHAR(50)   -- PENDING, IN_PROGRESS, COMPLETED, FAILED
-started_at              TIMESTAMP
-completed_at            TIMESTAMP
-metadata                JSONB         -- Store timestamps, labels, etc.
-error_message           TEXT
-```
+## AWS Services Used
 
-### `highlights` table (optional - for storing individual clips)
-
-```
-highlight_id       UUID PRIMARY KEY
-video_id           UUID REFERENCES videos(video_id)
-start_time         FLOAT NOT NULL    -- seconds
-end_time           FLOAT NOT NULL
-s3_key             VARCHAR(500)
-rekognition_labels JSONB             -- labels detected in this clip
-created_at         TIMESTAMP DEFAULT NOW()
-```
-
----
-
-## Alternative: Simpler Schema
-
-If you want to keep it minimal for the demo:
-
-### `videos` table (all-in-one)
-
-```
-video_id                UUID PRIMARY KEY
-user_id                 VARCHAR(255) NOT NULL  -- cognito sub
-original_s3_key         VARCHAR(500) NOT NULL
-final_s3_key            VARCHAR(500)
-thumbnail_s3_key        VARCHAR(500)
-status                  VARCHAR(50) NOT NULL
-highlights_metadata     JSONB  -- store all timestamps/labels here
-created_at              TIMESTAMP DEFAULT NOW()
-completed_at            TIMESTAMP
-error_message           TEXT
-```
-
-This avoids extra joins and keeps everything in one table. JSONB column handles variable highlight data.
-
----
-
-## Processing Flow Summary
-
-```
-User uploads → S3
-  ↓
-SQS → orchestrator Lambda (create DB record)
-  ↓
-Rekognition (analyze video)
-  ↓
-SNS → rekognition-handler Lambda (merge intervals)
-  ↓
-MediaConvert #1 (extract clips)
-  ↓
-EventBridge → chunks-handler Lambda
-  ↓
-Bedrock (generate commentary) → Polly (text-to-speech)
-  ↓
-MediaConvert #2 (stitch + audio overlay)
-  ↓
-EventBridge → final-handler Lambda (update DB, mark COMPLETED)
-  ↓
-Frontend polls /job/:id → shows completed video
-```
-
----
-
-## Considerations
-
-- **Presigned URLs**: Generate for both upload and download to keep S3 bucket private
-- **Polling vs WebSockets**: Polling `/job/:id` every 5s is simpler for demo
-- **Error handling**: Make sure every Lambda updates job status on failure
-- **Timeouts**: MediaConvert can take minutes - don't let API Gateway timeout
-- **Cost**: Rekognition + MediaConvert aren't free - test with short clips first
+**S3:** Video storage
+**EventBridge:** Event-driven trigger on upload
+**Step Functions:** Workflow orchestration
+**Lambda:** Serverless compute for processing
+**Rekognition Custom Labels:** Kill detection
+**Bedrock:** AI commentary generation
+**Polly:** Text-to-speech for voiceover
+**FFmpeg (Lambda Layer):** Video/audio processing
