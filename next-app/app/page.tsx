@@ -73,5 +73,11 @@ export default function Home() {
       gatewayURI={config?.gateway_url as string}
       onSignOut={signOut}
     />
+    // <HomePage
+    //   username={"local"}
+    //   email={"test"}
+    //   gatewayURI={"https://test.com"}
+    //   onSignOut={() => {}}
+    // />
   );
 }
