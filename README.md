@@ -178,13 +178,11 @@ S3 Upload → EventBridge → Orchestrator Lambda
 
 Lifecycle Policy: `Delete /processing/*` after 1 day
 
-## AWS Services Used
+## AWS Additional Services Used
 
-**S3:** Video storage
-**EventBridge:** Event-driven trigger on upload
-**Step Functions:** Workflow orchestration
-**Lambda:** Serverless compute for processing
-**Rekognition Custom Labels:** Kill detection
-**Bedrock:** AI commentary generation
-**Polly:** Text-to-speech for voiceover
-**FFmpeg (Lambda Layer):** Video/audio processing
+- **EventBridge:** Event-driven trigger on upload
+- **Step Functions:** Workflow orchestration
+- **Rekognition Custom Labels:** Kill detection
+- **Bedrock:** AI commentary generation
+- **Polly:** Text-to-speech for voiceover
+- **FFmpeg (Lambda Layer):** Video/audio processing
