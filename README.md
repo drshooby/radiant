@@ -109,6 +109,35 @@ S3 Upload → EventBridge → Orchestrator Lambda
                     Save to S3 + RDS + Cleanup
 ```
 
+## Helpful Commands
+
+### Rekognition
+
+- Start a Custom-Label model:
+
+```bash
+aws rekognition start-project-version \
+    --project-version-arn "arn:aws:rekognition:<region>:<aws-id>:project/<project-name>/version/<project>.<timestamp>/<version-creation-timestamp-unix>" \
+    --min-inference-units 1 \
+    --region <region>
+```
+
+- Stop a Custom-Label model:
+
+```bash
+aws rekognition stop-project-version \
+    --project-version-arn "arn:aws:rekognition:<region>:<aws-id>:project/<project-name>/version/<project>.<timestamp>/<version-creation-timestamp-unix>" \
+    --region <region>
+```
+
+- Get the status of a Custom-Label model:
+
+```bash
+ aws rekognition describe-project-versions \
+    --project-arn "arn:aws:rekognition:<region>:<aws-id>:project/<project-name>/version/<project>.<timestamp>/<version-creation-timestamp-unix>" \
+    --region <region> | grep Status
+```
+
 ## Lambda Functions
 
 ### Lambda 1: Start Rekognition
