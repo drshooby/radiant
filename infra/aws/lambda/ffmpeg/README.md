@@ -8,4 +8,4 @@ This guide walks through building a Lambda layer containing **FFmpeg and FFprobe
 
 ## Create ZIP
 
-- Run `scripts/ffmpeg_zip_create.sh`.
+- Run `scripts/ffmpeg_zip_create.sh`
