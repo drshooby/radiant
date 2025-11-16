@@ -57,3 +57,8 @@ variable "api_endpoints" {
   }))
   default = {}
 }
+
+variable "rekognition_model_arn" {
+  description = "ARN of the Rekognition Custom Labels model"
+  type        = string
+}
