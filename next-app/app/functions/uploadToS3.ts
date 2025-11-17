@@ -67,7 +67,7 @@ export async function uploadToS3({ file, userEmail, gatewayURI }: UploadToS3Para
     let status = await pollJobStatus(jobID, gatewayURI);
 
     while (!status.isComplete) {
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 10000));
       status = await pollJobStatus(jobID, gatewayURI);
       console.log(`Current status: ${status.status}`);
     }
