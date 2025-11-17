@@ -19,6 +19,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
   eventbridge = true
 }
 
+# Handle exclusion rules at the Lambda-level
 resource "aws_cloudwatch_event_rule" "s3_upload" {
   name        = "s3-upload-trigger-step-functions"
   description = "Trigger Step Functions when video uploaded to S3"
@@ -30,17 +31,6 @@ resource "aws_cloudwatch_event_rule" "s3_upload" {
       reason = ["PutObject"]
       bucket = {
         name = [aws_s3_bucket.upload_bucket.id]
-      }
-      object = {
-        key = [{
-          "anything-but" : {
-            "prefix" : "output/"
-          }
-          }, {
-          "anything-but" : {
-            "prefix" : "music/"
-          }
-        }]
       }
     }
   })

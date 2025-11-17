@@ -4,9 +4,19 @@ import os
 
 sfn_client = boto3.client('stepfunctions')
 
+ignore_events = [
+    "output/",
+    "music/"
+]
+
 def lambda_handler(event, context):
     bucket = event['detail']['bucket']['name']
     key = event['detail']['object']['key']
+
+    # Ignore output and music folders
+    if any(key.startswith(dir) for dir in ignore_events):
+        print(f"Ignoring excluded path: {key}")
+        return {'statusCode': 200, 'message': 'Ignored'}
     
     # Extract job ID from key structure: user@email.com/job-id/timestamp-filename
     parts = key.split('/')
