@@ -1,6 +1,5 @@
 import boto3
 import subprocess
-import json
 import glob
 import os
 
@@ -18,30 +17,7 @@ def lambda_handler(event, context):
     # Download video from S3
     video_file = '/tmp/video.mp4'
     s3.download_file(bucket, video_key, video_file)
-    
-    # Get video duration and frame rate using ffprobe
-    probe_cmd = [
-        'ffprobe', '-v', 'error',
-        '-select_streams', 'v:0',
-        '-show_entries', 'stream=r_frame_rate,duration',
-        '-of', 'json',
-        video_file
-    ]
-    
-    probe_result = subprocess.run(probe_cmd, capture_output=True, text=True)
-    video_info = json.loads(probe_result.stdout)
-    
-    # Parse frame rate (comes as "60/1" or similar)
-    fps_str = video_info['streams'][0]['r_frame_rate']
-    num, denom = map(int, fps_str.split('/'))
-    frame_rate = num / denom
-    
-    duration = float(video_info['streams'][0].get('duration', 0))
-    
-    print(f"Frame rate: {frame_rate} fps")
-    print(f"Duration: {duration}s")
-    print("Extracting 1 frame per second...")
-    
+        
     # Extract 1 frame per second using ffmpeg
     frames_dir = '/tmp/frames'
     os.makedirs(frames_dir, exist_ok=True)
@@ -82,8 +58,10 @@ def lambda_handler(event, context):
                         'time': timestamp_seconds,
                         'confidence': label['Confidence']
                     })
-                    print(f"  Found 'kill' at {timestamp_seconds}s (confidence: {label['Confidence']:.1f}%)")
         
+        except rekognition.exceptions.ResourceNotReadyException as e:
+            raise RuntimeError("Model is not ready. Failing Lambda so Step Functions can retry or stop.") from e
+
         except Exception as e:
             print(f"  Error processing frame {i}: {e}")
     
