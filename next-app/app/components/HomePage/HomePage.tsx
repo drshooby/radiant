@@ -62,14 +62,14 @@ export function HomePage({
   const handleFile = async (file: File) => {
     console.log("Attempting upload:", file.name);
 
-    const MAX_SIZE_MB = 100;
+    const MAX_SIZE_MB = 300;
     const fileSizeMB = file.size / (1024 * 1024);
 
     if (fileSizeMB > MAX_SIZE_MB) {
       const title = "File too large!";
       const message = `(${fileSizeMB.toFixed(
         1
-      )} MB). Please upload videos under ${MAX_SIZE_MB} MB (~20 seconds).`;
+      )} MB). Please upload videos under ${MAX_SIZE_MB} MB.`;
       handleFailModal({ title, message });
       return;
     }
