@@ -34,7 +34,11 @@ resource "aws_cloudwatch_event_rule" "s3_upload" {
       object = {
         key = [{
           "anything-but" : {
-            "prefix" : "output/" # Ignore files in output/
+            "prefix" : "output/"
+          }
+          }, {
+          "anything-but" : {
+            "prefix" : "music/"
           }
         }]
       }
