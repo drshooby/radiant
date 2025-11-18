@@ -1,8 +1,8 @@
-export interface Montage {
-  id: number;
-  thumbnail: string;
-  title: string;
-  url: string;
+export interface VideoRecord {
+  videoId: string;
+  jobId: string;
+  outputKey: string;
+  createdAt: string;
 }
 
 export interface VideoPlayerProps {

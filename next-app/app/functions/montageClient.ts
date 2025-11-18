@@ -1,12 +1,12 @@
 export interface UploadToS3Params {
   file: File;
-  userEmail: string;
 }
 
 export interface UploadToS3Response {
   success: boolean;
   s3Key: string;
   s3Url: string;
+  jobID: string;
   error?: string;
 }
 
@@ -24,12 +24,15 @@ interface PollResult {
 }
 
 export class MontageClient {
-  constructor(private readonly gatewayURI: string) {}
+  constructor(
+    private readonly gatewayURI: string, 
+    private readonly email: string
+  ) {}
 
-  async getPastMontages(userEmail: string) {
+  async getPastMontages() {
     const payload = {
       operation: "listVideos",
-      userEmail
+      userEmail: this.email
     };
 
     const response = await fetch(`${this.gatewayURI}/videos`, {
@@ -41,8 +44,18 @@ export class MontageClient {
     return await response.json();
   }
 
-  async getMontage(montageId: string) {
-    // Implementation here
+  async getVideoURL(outputKey: string): Promise<string> {
+    const response = await fetch(`${this.gatewayURI}/videos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        operation: 'getVideoURL',
+        outputKey: outputKey
+      })
+    });
+
+    const data = await response.json();
+    return data.url;
   }
 
   private async pollJobStatus(jobID: string): Promise<PollResult> {
@@ -59,7 +72,7 @@ export class MontageClient {
     return await response.json();
   }
 
-  async uploadToS3({ file, userEmail }: UploadToS3Params): Promise<UploadToS3Response> {
+  async uploadToS3({ file }: UploadToS3Params): Promise<UploadToS3Response> {
     try {
       const response = await fetch(`${this.gatewayURI}/get-upload-url`, {
         method: 'POST',
@@ -67,7 +80,7 @@ export class MontageClient {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userEmail: userEmail,
+          userEmail: this.email,
           fileName: file.name,
           contentType: file.type
         })
@@ -103,6 +116,7 @@ export class MontageClient {
         success: true,
         s3Key: s3Key,
         s3Url: s3Url,
+        jobID: jobID,
         error: undefined
       };
       
@@ -112,6 +126,7 @@ export class MontageClient {
         success: false,
         s3Key: '',
         s3Url: '',
+        jobID: '',
         error: error instanceof Error ? error.message : "Upload failed"
       };
     }

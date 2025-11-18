@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Upload } from "lucide-react";
 import styles from "./HomePage.module.css";
-import type { HomePageProps, Montage } from "./HomePage.types.ts";
+import type { HomePageProps, VideoRecord } from "./HomePage.types.ts";
 import { VideoPlayer } from "@/app/components/VideoPlayer";
 import { SignOutButton } from "@/app/components/SignOutButton";
 import { VideoLoading } from "@/app/components/VideoLoading";
-import { uploadToS3 } from "@/app/functions";
+import { MontageClient } from "@/app/functions";
 import { Modal } from "@/app/components/Modal";
 import { ModalProps } from "@/app/components/Modal/Modal.types";
 
@@ -15,6 +15,10 @@ export function HomePage({
   gatewayURI,
   onSignOut,
 }: HomePageProps) {
+  const client = useMemo(
+    () => new MontageClient(gatewayURI, email),
+    [gatewayURI, email]
+  );
   const [showUpload, setShowUpload] = useState<boolean>(true);
   const [currentVideo, setCurrentVideo] = useState<string | null>(null);
   const [processing, setProcessing] = useState<boolean>(false);
@@ -22,14 +26,35 @@ export function HomePage({
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [modalData, setModalData] = useState<ModalProps | undefined>(undefined);
+  const [previousMontages, setPreviousMontages] = useState<VideoRecord[]>([]);
 
-  // const previousMontages: Montage[] = [];
+  const fetchVideos = async () => {
+    try {
+      const videos = await client.getPastMontages();
+      setPreviousMontages(videos);
+    } catch (error) {
+      console.error("Failed to fetch videos:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchVideos();
+  }, []);
+
+  const formatDate = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
 
   const handleFailModal = (errorDetails: ModalProps) => {
-    console.log("handleFailModal called with:", errorDetails);
     setModalOpen(true);
     setModalData(errorDetails);
-    console.log("Modal state updated");
   };
 
   const handleDrag = (e: React.DragEvent<HTMLLabelElement>) => {
@@ -48,18 +73,18 @@ export function HomePage({
     setDragActive(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
+      handleUpload(e.dataTransfer.files[0]);
     }
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
+      handleUpload(e.target.files[0]);
       e.target.value = "";
     }
   };
 
-  const handleFile = async (file: File) => {
+  const handleUpload = async (file: File) => {
     console.log("Attempting upload:", file.name);
 
     const MAX_SIZE_MB = 300;
@@ -81,36 +106,37 @@ export function HomePage({
 
     try {
       // Upload to S3
-      const uploadResult = await uploadToS3({
+      const uploadResult = await client.uploadToS3({
         file,
-        userEmail: email,
-        gatewayURI,
       });
 
       if (!uploadResult.success) {
         throw new Error(uploadResult.error);
       }
 
-      console.log(uploadResult.s3Key);
-      console.log(uploadResult.s3Url);
-
-      // For now, create local preview
-      // const videoUrl = URL.createObjectURL(file);
-      // setCurrentVideo(videoUrl);
-      // setProcessing(false);
+      await fetchVideos();
     } catch (error) {
-      console.error("Error processing video:", error);
-      // TODO: Show error message to user
+      handleFailModal({
+        title: "Error processing your video!",
+        message:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      });
     } finally {
       setProcessing(false);
       setShowUpload(true);
     }
   };
 
-  const loadMontage = (montage: Montage) => {
+  const loadMontage = async (video: VideoRecord) => {
     if (processing) return;
-    setCurrentVideo(montage.url);
-    setShowUpload(false);
+
+    try {
+      const url = await client.getVideoURL(video.videoId);
+      setCurrentVideo(url);
+      setShowUpload(false);
+    } catch (error) {
+      console.error("Failed to load video:", error);
+    }
   };
 
   const showUploadScreen = () => {
@@ -177,30 +203,46 @@ export function HomePage({
           )}
         </section>
 
-        {/* <section className={styles.montagesSection}>
+        <section className={styles.montagesSection}>
           <h2 className={styles.sectionTitle}>Previous Montages</h2>
           <div
             className={`${styles.montagesGrid} ${
               processing ? styles.disabled : ""
             }`}
           >
-            {previousMontages.map((montage) => (
+            {previousMontages.map((video) => (
               <div
-                key={montage.id}
+                key={video.videoId}
                 className={styles.montageCard}
-                onClick={() => loadMontage(montage)}
+                onClick={() => loadMontage(video)}
                 style={{ cursor: processing ? "not-allowed" : "pointer" }}
               >
-                <img
-                  src={montage.thumbnail}
-                  alt={montage.title}
-                  className={styles.montageThumbnail}
-                />
-                <div className={styles.montageTitle}>{montage.title}</div>
+                <div className={styles.videoPlaceholder}>
+                  <svg
+                    className={styles.videoIcon}
+                    width="60"
+                    height="60"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                </div>
+                <div className={styles.montageInfo}>
+                  <div className={styles.montageTitle}>
+                    {video.outputKey.split("/").pop()?.replace(".mp4", "") ||
+                      "Montage"}
+                  </div>
+                  <div className={styles.montageDate}>
+                    {formatDate(video.createdAt)}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-        </section> */}
+        </section>
 
         {isModalOpen && modalData && (
           <Modal
