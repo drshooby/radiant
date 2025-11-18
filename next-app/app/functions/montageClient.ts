@@ -44,13 +44,13 @@ export class MontageClient {
     return await response.json();
   }
 
-  async getVideoURL(outputKey: string): Promise<string> {
+  async getVideoURL(videoId: string): Promise<string> {
     const response = await fetch(`${this.gatewayURI}/videos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         operation: 'getVideoURL',
-        outputKey: outputKey
+        videoId: videoId
       })
     });
 
