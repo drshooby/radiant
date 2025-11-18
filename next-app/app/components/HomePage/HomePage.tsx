@@ -15,9 +15,10 @@ export function HomePage({
   gatewayURI,
   onSignOut,
 }: HomePageProps) {
+  const backendCompatibleEmail = email.replace("@", "_at_");
   const client = useMemo(
-    () => new MontageClient(gatewayURI, email),
-    [gatewayURI, email]
+    () => new MontageClient(gatewayURI, backendCompatibleEmail),
+    [gatewayURI, backendCompatibleEmail]
   );
   const [showUpload, setShowUpload] = useState<boolean>(true);
   const [currentVideo, setCurrentVideo] = useState<string | null>(null);
