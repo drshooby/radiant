@@ -169,94 +169,11 @@
   font-size: 0.9rem;
 }
 
-.toggleSection {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-}
-
-.toggleLabel {
-  color: var(--charcoal);
-  font-size: 0.95rem;
-}
-
-.toggleSwitch {
-  position: relative;
-  width: 60px;
-  height: 30px;
-  background: var(--charcoal);
-  border-radius: 15px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.toggleSwitch.active {
-  background: var(--yellow);
-}
-
-.toggleSlider {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 24px;
-  height: 24px;
-  background: var(--white);
-  border-radius: 50%;
-  transition: transform 0.3s ease;
-}
-
-.toggleSwitch.active .toggleSlider {
-  transform: translateX(30px);
-}
-
-.montagesSection {
-  margin-top: 3rem;
-}
-
 .sectionTitle {
   font-size: 1.5rem;
   color: var(--charcoal);
   margin-bottom: 1.5rem;
   font-weight: 600;
-}
-
-.montagesGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-
-.montageCard {
-  cursor: pointer;
-  border-radius: 8px;
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  background: var(--light-gray);
-}
-
-.montageCard:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-}
-
-.montageCard:hover .montageThumbnail {
-  border-color: var(--yellow);
-}
-
-.montageThumbnail {
-  width: 100%;
-  aspect-ratio: 16/9;
-  object-fit: cover;
-  border-bottom: 3px solid transparent;
-  transition: border-color 0.3s ease;
-}
-
-.montageTitle {
-  padding: 1rem;
-  font-size: 1rem;
-  color: var(--charcoal);
-  font-weight: 500;
 }
 
 .actionSection {
@@ -335,4 +252,53 @@
 .disabled {
   pointer-events: none;
   opacity: 0.5;
+}
+
+.montagesSection {
+  margin-top: 3rem;
+}
+
+.videoPlaceholder {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 3px solid transparent;
+  transition: border-color 0.3s ease;
+}
+
+.montageCard:hover .videoPlaceholder {
+  border-color: var(--yellow);
+}
+
+.videoIcon {
+  color: var(--charcoal);
+  opacity: 0.3;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.montageCard:hover .videoIcon {
+  opacity: 0.6;
+  transform: scale(1.1);
+}
+
+.montageInfo {
+  padding: 1rem;
+}
+
+.montageTitle {
+  font-size: 1rem;
+  color: var(--charcoal);
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.montageDate {
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.5);
 }
