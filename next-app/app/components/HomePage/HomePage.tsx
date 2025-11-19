@@ -42,17 +42,6 @@ export function HomePage({
     fetchVideos();
   }, []);
 
-  const formatDate = (isoString: string) => {
-    const date = new Date(isoString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
-
   const handleFailModal = (errorDetails: ModalProps) => {
     setModalOpen(true);
     setModalData(errorDetails);
@@ -188,7 +177,10 @@ export function HomePage({
                 />
               </label>
             ) : (
-              <VideoPlayer videoName={currentVideo as string} />
+              <VideoPlayer
+                key={currentVideo}
+                videoName={currentVideo as string}
+              />
             )}
           </div>
 
@@ -212,13 +204,17 @@ export function HomePage({
               processing ? styles.disabled : ""
             }`}
           >
-            {previousMontages.map((video) => (
+            typescriptreact
+            {previousMontages.map((video, index) => (
               <div
                 key={video.videoId}
                 className={styles.montageCard}
                 onClick={() => loadMontage(video)}
                 style={{ cursor: processing ? "not-allowed" : "pointer" }}
               >
+                {index === 0 && (
+                  <div className={styles.latestBadge}>Latest</div>
+                )}
                 <div className={styles.videoPlaceholder}>
                   <svg
                     className={styles.videoIcon}
@@ -236,9 +232,6 @@ export function HomePage({
                   <div className={styles.montageTitle}>
                     {video.outputKey.split("/").pop()?.replace(".mp4", "") ||
                       "Montage"}
-                  </div>
-                  <div className={styles.montageDate}>
-                    {formatDate(video.createdAt)}
                   </div>
                 </div>
               </div>
