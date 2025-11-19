@@ -18,7 +18,7 @@ def lambda_handler(event, context):
     # Extract email from S3 key (e.g., "david@test.com/video.mp4" -> "david@test.com")
     try:
         email = video_key.split('/')[0]
-        if '@' not in email:
+        if '_at_' not in email:
             raise ValueError("Invalid email format in videoKey")
     except Exception as e:
         return {
