@@ -43,6 +43,24 @@ resource "aws_iam_role_policy" "db_secrets_manager_policy" {
           "secretsmanager:DescribeSecret"
         ]
         Resource = aws_secretsmanager_secret.db_secret.arn
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "db_lambda_s3" {
+  name = "db-lambda-s3-access"
+  role = aws_iam_role.db_lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject"
+        ]
+        Resource = "${aws_s3_bucket.upload_bucket.arn}/*"
       }
     ]
   })
