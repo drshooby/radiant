@@ -182,8 +182,10 @@ def lambda_handler(event, context):
                     '-filter_complex', f'{filter_complex};{audio_filter}',
                     '-map', '[outv]',
                     '-map', '[outa]',
-                    '-c:v', 'mpeg2video',
-                    '-qscale:v', '2',
+                    '-c:v', 'libx264',
+                    '-preset', 'fast',
+                    '-pix_fmt', 'yuv420p',
+                    '-movflags', '+faststart',
                     '-c:a', 'aac',
                     '-y', concatenated_file
                 ], check=True, capture_output=True)
@@ -220,9 +222,11 @@ def lambda_handler(event, context):
                     *inputs,
                     '-filter_complex', filter_complex,
                     '-map', f'[{final_video_label}]',
-                    '-map', '[outa]',  # Use concatenated audio instead of just first clip
-                    '-c:v', 'mpeg2video',
-                    '-qscale:v', '2',
+                    '-map', '[outa]',
+                    '-c:v', 'libx264',
+                    '-preset', 'fast',
+                    '-pix_fmt', 'yuv420p',
+                    '-movflags', '+faststart',
                     '-c:a', 'aac',
                     '-y', concatenated_file
                 ], check=True, capture_output=True)
@@ -272,7 +276,11 @@ def lambda_handler(event, context):
                 '-filter_complex', '[1:a]volume=0.2[bg];[0:a][bg]amix=inputs=2:duration=first[a]',
                 '-map', '0:v',
                 '-map', '[a]',
-                '-c:v', 'copy',
+                '-c:v', 'libx264',
+                '-preset', 'fast',
+                '-pix_fmt', 'yuv420p',
+                '-movflags', '+faststart',
+                '-c:a', 'aac',
                 '-shortest',
                 '-y', final_output
             ], check=True, capture_output=True)
