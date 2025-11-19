@@ -18,11 +18,14 @@ output "cognito_pool_endpoint" {
 
 output "api_endpoint_urls" {
   value = {
-    base_url = "${aws_api_gateway_stage.stage.invoke_url}${aws_api_gateway_resource.api.path}"
     endpoints = {
       for key, endpoint in local.api_endpoints :
       key => "${aws_api_gateway_stage.stage.invoke_url}${aws_api_gateway_resource.api.path}/${endpoint.path_part}"
     }
   }
   description = "API Gateway endpoint URLs"
+}
+
+output "api_gateway_base_url" {
+  value = "${aws_api_gateway_stage.stage.invoke_url}${aws_api_gateway_resource.api.path}"
 }
