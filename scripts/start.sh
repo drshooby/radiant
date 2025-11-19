@@ -30,7 +30,7 @@ echo "=================="
 # Sync music to S3
 echo "Adding NCS music to S3..."
 S3_BUCKET="$(terraform output -raw upload_bucket)"
-aws s3 sync "$MUSIC_DIR" "$S3_BUCKET/music" --exact-timestamps
+aws s3 sync "$MUSIC_DIR" "$S3_BUCKET/music" --exact-timestamps --exclude "README.md"
 echo "Added NCS music to S3."
 echo "=================="
 
