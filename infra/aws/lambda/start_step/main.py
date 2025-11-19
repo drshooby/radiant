@@ -4,22 +4,30 @@ import os
 
 sfn_client = boto3.client('stepfunctions')
 
-ignore_events = [
-    "output/",
-    "music/"
+ignore_dirs = [
+    "output",
+    "music"
 ]
 
 def lambda_handler(event, context):
     bucket = event['detail']['bucket']['name']
     key = event['detail']['object']['key']
 
-    # Ignore output and music folders
-    if any(key.startswith(dir) for dir in ignore_events):
-        print(f"Ignoring excluded path: {key}")
-        return {'statusCode': 200, 'message': 'Ignored'}
-    
-    # Extract job ID from key structure: user@email.com/job-id/timestamp-filename
+    print("Bucket:", bucket)
+    print("Key:", key)
+
+    # Split the key to check path parts
     parts = key.split('/')
+    
+    # Ignore if any path part matches ignored directories
+    if any(part in ignore_dirs for part in parts):
+        print(f"Ignoring event for key containing ignored directory: {key}")
+        return {
+            'statusCode': 200,
+            'body': json.dumps('Ignored')
+        }
+    
+    # Now safe to extract job ID
     if len(parts) < 2:
         raise ValueError(f"Invalid S3 key format: {key}")
     
