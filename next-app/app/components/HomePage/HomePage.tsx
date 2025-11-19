@@ -204,7 +204,6 @@ export function HomePage({
               processing ? styles.disabled : ""
             }`}
           >
-            typescriptreact
             {previousMontages.map((video, index) => (
               <div
                 key={video.videoId}

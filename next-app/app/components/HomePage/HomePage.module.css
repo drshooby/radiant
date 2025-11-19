@@ -258,6 +258,12 @@
   margin-top: 3rem;
 }
 
+.montagesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
 .montageCard {
   position: relative;
   cursor: pointer;
