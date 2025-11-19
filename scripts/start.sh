@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(pwd)/.."
 INFRA_DIR="${ROOT_DIR}/infra/aws"
+MUSIC_DIR="${ROOT_DIR}/music"
 
 REKOGNITION_ARN="${1:-}"
 REGION="${2:-us-east-1}"
@@ -20,22 +21,33 @@ aws rekognition start-project-version \
 
 echo "Rekognition starting..."
 
+# Run Terraform in infra dir
 cd "$INFRA_DIR"
 terraform apply -auto-approve
 echo "Terraform apply complete!"
 echo "=================="
 
+# Sync music to S3
+echo "Adding NCS music to S3..."
+S3_BUCKET="$(terraform output -raw upload_bucket)"
+aws s3 sync "$MUSIC_DIR" "$S3_BUCKET/music" --exact-timestamps
+echo "Added NCS music to S3."
+echo "=================="
+
+# Output API Gateway URL
 API_BASE_URL="$(terraform output -raw api_gateway_base_url)"
 echo "Add this API Gateway URL to GitHub Actions secrets and run the workflow:"
 echo "$API_BASE_URL"
 echo "=================="
 
+# Output Cognito URLs
 COGNITO_DOMAIN_URI="$(terraform output -raw cognito_pool_domain)"
 echo "Add these URLs to Google Cloud OAuth:"
 echo "Authorized JavaScript origin:  $COGNITO_DOMAIN_URI"
 echo "Authorized redirect URI:       ${COGNITO_DOMAIN_URI}/oauth2/idpresponse"
 echo "=================="
 
+# Poll Rekognition status
 echo "Polling for Rekognition model status..."
 MAX_ATTEMPTS=50
 CURRENT_ATTEMPTS=0
