@@ -39,7 +39,7 @@ def build_api_rsp(output, status):
         "headers": {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Headers": "Content-Type",
-            "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS"
+            "Access-Control-Allow-Methods": "POST"
         },
         "body": json.dumps(output)
     }
@@ -94,28 +94,36 @@ def list_videos(data):
     return build_api_rsp(results, 200)
 
 
-def get_video_url(data):
+def get_video_url(data):    
     video_id = data["videoId"]
     
     conn = get_connection()
+    
     with conn.cursor() as cur:
         cur.execute("""
             SELECT output_key FROM videos WHERE id = %s
         """, (video_id,))
         row = cur.fetchone()
+    
+    print(f"DEBUG - Query result: {row}")
 
     if not row:
-        return {"error": "Video not found"}
+        print("ERROR - Video not found in database")
+        return build_api_rsp({"error": "Video not found"}, 404)
 
     output_key = row[0]
 
     expire_time = 3600
 
-    presigned = s3.generate_presigned_url(
-        "get_object",
-        Params={"Bucket": BUCKET_NAME, "Key": output_key},
-        ExpiresIn=expire_time
-    )
+    try:
+        presigned = s3.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": BUCKET_NAME, "Key": output_key},
+            ExpiresIn=expire_time
+        )
+    except Exception as e:
+        print(f"ERROR - Failed to generate presigned URL: {str(e)}")
+        return build_api_rsp({"error": f"Failed to generate URL: {str(e)}"}, 500)
 
     result = {
         "videoId": video_id,
@@ -151,9 +159,7 @@ def delete_video(data):
     }
 
 
-def lambda_handler(event, context):
-    print("DEBUG - Raw event:", json.dumps(event))
-    
+def lambda_handler(event, context):    
     # Step Functions passes data directly, API Gateway wraps it in 'body'
     if "body" in event:
         # API Gateway call
@@ -165,9 +171,7 @@ def lambda_handler(event, context):
         # Direct invocation (Step Functions)
         body = event
     
-    print("DEBUG - Parsed body:", json.dumps(body))
     operation = body.get("operation")
-    print("DEBUG - Operation:", operation)
 
     conn = get_connection()
     with conn.cursor() as cur:
