@@ -51,7 +51,6 @@ def lambda_handler(event, context):
             'totalClips': 0
         }
 
-    output_clips = []
     clip_files = []  # Keep track of processed clips for concatenation
 
     prompt = """You are an excited esports commentator. Generate ONE short, energetic commentary line for a Valorant highlight clip.
@@ -149,13 +148,6 @@ def lambda_handler(event, context):
             print(f"  Clip with commentary created: {final_file}")
             
             clip_files.append(final_file)
-            
-            output_clips.append({
-                'clipNumber': i + 1,
-                'start': clip['start'],
-                'end': clip['end'],
-                'commentary': commentary
-            })
         except subprocess.CalledProcessError as e:
             print(f"  ffmpeg overlay error: {e.stderr.decode()}")
             continue
@@ -326,20 +318,40 @@ def lambda_handler(event, context):
     if final_output:
         base_name, _ = os.path.splitext(video_filename)
         output_key = f"{email}/output/{base_name}_montage.mp4"
+
+        # Generate thumbnail from the video
+        thumbnail_file = '/tmp/thumbnail.jpg'
+        thumbnail_key = f"{email}/output/{base_name}_thumbnail.jpg"
+
+        try:
+            # Extract a frame at 1 second into the video
+            subprocess.run([
+                'ffmpeg',
+                '-i', final_output,
+                '-ss', '1',
+                '-vframes', '1',
+                '-q:v', '2',
+                '-y', thumbnail_file
+            ], check=True, capture_output=True)
+            
+            print(f"Thumbnail generated: {thumbnail_file}")
+            
+            # Upload thumbnail to S3
+            s3.upload_file(thumbnail_file, bucket, thumbnail_key)
+            print(f"Uploaded thumbnail to s3://{bucket}/{thumbnail_key}")
+            
+        except Exception as e:
+            print(f"Thumbnail generation/upload error: {e}")
         
         try:
             s3.upload_file(final_output, bucket, output_key)
-            print(f"  Uploaded final video to s3://{bucket}/{output_key}")
-            
-            # Update output_clips with the final montage key
-            for clip in output_clips:
-                clip['montageKey'] = output_key
+            print(f"Uploaded final video to s3://{bucket}/{output_key}")
                 
         except Exception as e:
-            print(f"  S3 upload error: {e}")
+            print(f"S3 upload error: {e}")
 
     # Cleanup all temp files
-    cleanup_files = [video_file, music_file, concatenated_file, final_output] + clip_files
+    cleanup_files = [video_file, music_file, concatenated_file, final_output, thumbnail_file] + clip_files
     for temp_file in cleanup_files:
         if temp_file and os.path.exists(temp_file):
             try:
@@ -350,7 +362,6 @@ def lambda_handler(event, context):
     return {
         'videoKey': video_key,
         'email': email,
-        'clips': output_clips,
-        'totalClips': len(output_clips),
-        'montageKey': output_key if final_output else None
+        'montageKey': output_key if final_output else None,
+        'thumbnailKey': thumbnail_key if final_output else None
     }
