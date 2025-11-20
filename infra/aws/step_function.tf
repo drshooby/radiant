@@ -127,11 +127,12 @@ resource "aws_sfn_state_machine" "process_upload" {
         End      = true
         Resource = aws_lambda_function.db_func.arn
         Parameters = {
-          "operation"   = "createVideoRecord"
-          "userEmail.$" = "$.email"
-          "jobId.$"     = "$$.Execution.Name"
-          "inputKey.$"  = "$.videoKey"
-          "outputKey.$" = "$.montageKey"
+          "operation"      = "createVideoRecord"
+          "userEmail.$"    = "$.email"
+          "jobId.$"        = "$$.Execution.Name"
+          "inputKey.$"     = "$.videoKey"
+          "outputKey.$"    = "$.montageKey"
+          "thumbnailKey.$" = "$.thumbnailKey"
         }
       }
     }
