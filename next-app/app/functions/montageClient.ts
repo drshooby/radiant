@@ -1,13 +1,15 @@
-export interface UploadToS3Params {
-  file: File;
-}
-
 export interface UploadToS3Response {
   success: boolean;
   s3Key: string;
   s3Url: string;
   jobID: string;
   error?: string;
+}
+
+export interface DeleteVideoResponse {
+  success: boolean,
+  message: string,
+  videoId?: string
 }
 
 interface PollResult {
@@ -28,6 +30,21 @@ export class MontageClient {
     private readonly gatewayURI: string, 
     private readonly email: string
   ) {}
+
+  async deleteVideo(videoId: string): Promise<DeleteVideoResponse> {
+    const payload = {
+      operation: "deleteVideo",
+      videoId
+    };
+
+    const response = await fetch(`${this.gatewayURI}/videos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+
+    return await response.json()
+  }
 
   async getPastMontages() {
     const payload = {
@@ -72,7 +89,7 @@ export class MontageClient {
     return await response.json();
   }
 
-  async uploadToS3({ file }: UploadToS3Params): Promise<UploadToS3Response> {
+  async uploadToS3(file: File): Promise<UploadToS3Response> {
     try {
       const response = await fetch(`${this.gatewayURI}/get-upload-url`, {
         method: 'POST',

@@ -75,6 +75,17 @@ export function HomePage({
     }
   };
 
+  const handleDeleteVideo = async (video: VideoRecord) => {
+    const deleteResult = await client.deleteVideo(video.videoId);
+    if (!deleteResult.success) {
+      handleFailModal({
+        title: "Video failed to delete!",
+        message: deleteResult.message,
+      });
+    }
+    fetchVideos();
+  };
+
   const handleUpload = async (file: File) => {
     console.log("Attempting upload:", file.name);
 
@@ -97,9 +108,7 @@ export function HomePage({
 
     try {
       // Upload to S3
-      const uploadResult = await client.uploadToS3({
-        file,
-      });
+      const uploadResult = await client.uploadToS3(file);
 
       if (!uploadResult.success) {
         throw new Error(uploadResult.error);
@@ -215,6 +224,30 @@ export function HomePage({
                 {index === 0 && (
                   <div className={styles.latestBadge}>Latest</div>
                 )}
+                <button
+                  className={styles.deleteButton}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteVideo(video);
+                  }}
+                  aria-label="Delete video"
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
+                  </svg>
+                </button>
                 <div className={styles.thumbnailContainer}>
                   {video.thumbnailUrl ? (
                     <Image
