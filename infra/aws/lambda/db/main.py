@@ -171,15 +171,21 @@ def delete_video(data):
         cur.execute("DELETE FROM videos WHERE id = %s", (video_id,))
         conn.commit()
 
-    s3.delete_object(Bucket=BUCKET_NAME, Key=output_key)
-    if thumbnail_key:
-        s3.delete_object(Bucket=BUCKET_NAME, Key=thumbnail_key)
+    try:
+        s3.delete_object(Bucket=BUCKET_NAME, Key=output_key)
+        if thumbnail_key:
+            s3.delete_object(Bucket=BUCKET_NAME, Key=thumbnail_key)
+    except Exception as e:
+        return build_api_rsp({
+            "success": False,
+            "message": f"Video failed to delete: {str(e)}"
+        }, 500)
 
-    return {
-        "status": "ok",
-        "message": "Video deleted.",
+    return build_api_rsp({
+        "success": True,
+        "message": "Video deleted successfully.",
         "videoId": video_id
-    }
+    }, 200)
 
 
 def lambda_handler(event, context):    
