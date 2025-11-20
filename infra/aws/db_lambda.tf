@@ -58,7 +58,8 @@ resource "aws_iam_role_policy" "db_lambda_s3" {
       {
         Effect = "Allow"
         Action = [
-          "s3:GetObject"
+          "s3:GetObject",
+          "s3:DeleteObject"
         ]
         Resource = "${aws_s3_bucket.upload_bucket.arn}/*"
       }
