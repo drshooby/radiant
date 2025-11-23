@@ -8,14 +8,19 @@ import traceback
 
 s3_client = boto3.client('s3', region_name='us-east-1')
 
+def build_api_rsp(output, status):
+    return {
+        "statusCode": status,
+        "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Methods": "POST, OPTIONS"
+        },
+        "body": json.dumps(output)
+    }
+
 def lambda_handler(event, context):
     print(f"Received event: {json.dumps(event)}")
-    
-    cors_headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
-    }
     
     try:
         body = json.loads(event['body'])
@@ -41,34 +46,20 @@ def lambda_handler(event, context):
             ExpiresIn=300
         )
         
-        return {
-            'statusCode': 200,
-            'headers': cors_headers,
-            'body': json.dumps({
+        return build_api_rsp({
                 'presignedUrl': presigned_url,
                 's3Key': s3_key,
                 's3Url': f"https://{bucket_name}.s3.amazonaws.com/{s3_key}",
                 'jobID': job_id
-            })
-        }
+            }, 200)
         
     except ClientError as e:
         print(f"ClientError: {str(e)}")
-        print(traceback.format_exc())
-        return {
-            'statusCode': 500,
-            'headers': cors_headers,
-            'body': json.dumps({
+        return build_api_rsp({
                 'error': str(e)
-            })
-        }
+            }, 500)
     except Exception as e:
         print(f"Exception: {str(e)}")
-        print(traceback.format_exc())
-        return {
-            'statusCode': 400,
-            'headers': cors_headers,
-            'body': json.dumps({
+        return build_api_rsp({
                 'error': str(e)
-            })
-        }
+            }, 400)
