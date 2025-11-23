@@ -1,10 +1,20 @@
 import boto3
 import json
 import os
-import traceback
 from datetime import datetime, timezone
 
 client = boto3.client('stepfunctions')
+
+def build_api_rsp(output, status):
+    return {
+        "statusCode": status,
+        "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Methods": "POST"
+        },
+        "body": json.dumps(output)
+    }
 
 def lambda_handler(event, context):
     try:
@@ -18,17 +28,7 @@ def lambda_handler(event, context):
         print(f"Received job_id: {job_id}")
         
         if not job_id:
-            return {
-                'statusCode': 400,
-                'headers': {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                    'Access-Control-Allow-Methods': 'POST, OPTIONS'
-                },
-                'body': json.dumps({
-                    'error': 'jobId is required'
-                })
-            }
+            return build_api_rsp({'error': 'jobId is required'}, 400)
         
         # Construct execution ARN
         state_machine_arn = os.environ.get('STATE_MACHINE_ARN')
@@ -63,47 +63,22 @@ def lambda_handler(event, context):
                 result['error'] = response.get('error')
                 result['cause'] = response.get('cause')
         
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS'
-            },
-            'body': json.dumps(result)
-        }
+        return build_api_rsp(result, 200)
         
     except client.exceptions.ExecutionDoesNotExist:
         print(f"Execution not found for job_id: {job_id}")
-        return {
-            'statusCode': 202,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS'
-            },
-            'body': json.dumps({
+        return build_api_rsp({
                 'jobId': job_id,
                 'status': 'PENDING_REDRIVE',
                 'isComplete': False,
                 'found': False,
                 'startDate': datetime.now(timezone.utc).isoformat(),
                 'message': 'Execution not started yet'
-            })
-        }
+            }, 202)
     
     except Exception as e:
         print(f"Error: {str(e)}")
-        print(traceback.format_exc())
-        return {
-            'statusCode': 500,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS'
-            },
-            'body': json.dumps({
+        return build_api_rsp({
                 'error': str(e),
                 'type': type(e).__name__
-            })
-        }
+            }, 500)
