@@ -41,7 +41,7 @@ def lambda_handler(event, context):
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': cognito_redirect_uri,
                 'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'GET,OPTIONS'
+                'Access-Control-Allow-Methods': 'GET'
             },
             'body': json.dumps({
                 'COGNITO_ENDPOINT': cognito_endpoint,

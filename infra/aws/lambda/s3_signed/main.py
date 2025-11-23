@@ -14,7 +14,7 @@ def build_api_rsp(output, status):
         "headers": {
             "Access-Control-Allow-Origin": "https://brutus.ettukube.com",
             "Access-Control-Allow-Headers": "Content-Type",
-            "Access-Control-Allow-Methods": "POST, OPTIONS"
+            "Access-Control-Allow-Methods": "POST"
         },
         "body": json.dumps(output)
     }
