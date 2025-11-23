@@ -57,7 +57,7 @@ def lambda_handler(event, context):
             'statusCode': 500,
             'headers': {
                 'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
+                'Access-Control-Allow-Origin': cognito_redirect_uri
             },
             'body': json.dumps({'error': 'Internal server error'})
         }
