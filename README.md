@@ -85,15 +85,18 @@ Once done, Google sign-in will be enabled in the Cognito UI.
 ### Deployment Steps
 
 1. **Build Lambda Layers:**
+
    ```bash
    cd scripts/
    ./ffmpeg_zip_create.sh    # Creates ffmpeg-layer.zip on ~/Desktop
    ./psycopg_zip_create.sh   # Creates psycopg-layer.zip on ~/Desktop
    ```
+
    Upload these layers to AWS Lambda manually or via Terraform.
 
 2. **Configure Terraform Variables:**
    Create `infra/aws/terraform.tfvars`:
+
    ```hcl
    google_auth_client_id     = "your-google-client-id"
    google_auth_client_secret = "your-google-client-secret"
@@ -107,12 +110,14 @@ Once done, Google sign-in will be enabled in the Cognito UI.
    ```
 
 3. **Deploy Infrastructure:**
+
    ```bash
    cd scripts/
    ./start.sh <REKOGNITION_VERSION_ARN> <PROJECT_ARN> us-east-1
    ```
-   
+
    This will:
+
    - Start Rekognition model
    - Apply Terraform configuration
    - Upload music files to S3
@@ -145,23 +150,27 @@ cd scripts/
 **Base URL:** `https://{api-id}.execute-api.{region}.amazonaws.com/prod/api/`
 
 ### `GET /cognito`
+
 - **Purpose:** Get Cognito configuration for frontend authentication
 - **Auth:** None
 - **Response:** Cognito client ID, domain, and endpoints
 
 ### `POST /get-upload-url`
+
 - **Purpose:** Get presigned S3 URL for video upload
 - **Auth:** Required (Cognito token)
 - **Body:** `{ "email": string, "filename": string, "contentType": string }`
 - **Response:** `{ "url": string, "key": string }`
 
 ### `POST /poll`
+
 - **Purpose:** Check Step Functions execution status
 - **Auth:** Required (Cognito token)
 - **Body:** `{ "executionArn": string }`
 - **Response:** `{ "status": string, "output": object }`
 
 ### `POST /videos`
+
 - **Purpose:** Database operations for video management
 - **Auth:** Required (Cognito token)
 - **Operations:**
@@ -216,11 +225,13 @@ S3 Upload → EventBridge → Start Step Function Lambda
 **Purpose:** Deploy infrastructure and start the Rekognition model
 
 **Usage:**
+
 ```bash
 ./scripts/start.sh <REKOGNITION_ARN> <PROJECT_ARN> [REGION]
 ```
 
 **Actions:**
+
 1. Starts the Rekognition Custom Labels model
 2. Runs `terraform apply` in `infra/aws/`
 3. Syncs music files from `music/` to S3 bucket (excluding README.md)
@@ -233,11 +244,13 @@ S3 Upload → EventBridge → Start Step Function Lambda
 **Purpose:** Tear down infrastructure and clean up resources
 
 **Usage:**
+
 ```bash
 ./scripts/teardown.sh [REKOGNITION_ARN] [AWS_REGION]
 ```
 
 **Actions:**
+
 1. Stops the Rekognition Custom Labels model (if ARN provided)
 2. Force-deletes AWS Secrets Manager secrets (`app-config`, `db-secret`)
 3. Runs `terraform destroy` in `infra/aws/`
@@ -247,11 +260,13 @@ S3 Upload → EventBridge → Start Step Function Lambda
 **Purpose:** Sync Next.js static site output files to S3 bucket with GitHub Actions
 
 **Usage:**
+
 ```bash
 ./scripts/s3.sh <BUCKET_NAME> <SOURCE_DIR>
 ```
 
 **Actions:**
+
 - Validates bucket exists and is accessible
 - Syncs source directory to S3 with `--delete` flag
 
@@ -260,6 +275,7 @@ S3 Upload → EventBridge → Start Step Function Lambda
 **Purpose:** Build FFmpeg Lambda layer for AWS Lambda (AL2023/Python 3.12)
 
 **Actions:**
+
 1. Runs Docker container with `amazonlinux:2023` image
 2. Builds x264 library from source
 3. Builds FFmpeg with libx264 support
@@ -270,6 +286,7 @@ S3 Upload → EventBridge → Start Step Function Lambda
 **Purpose:** Build psycopg2 Lambda layer for AWS Lambda (Python 3.12)
 
 **Actions:**
+
 1. Runs Docker container with AWS Lambda Python 3.12 base image
 2. Builds psycopg2 with PostgreSQL development libraries
 3. Creates `psycopg-layer.zip` on `~/Desktop`
@@ -355,12 +372,14 @@ S3 Upload → EventBridge → Start Step Function Lambda
 **Requirements:** psycopg2 Lambda Layer
 
 **Operations:**
+
 - `createVideoRecord`: Insert new video record (called by Step Functions)
 - `listVideos`: Get all videos for a user with presigned thumbnail URLs
 - `getVideoURL`: Get presigned URL for video playback (20 min expiry)
 - `deleteVideo`: Delete video record and S3 objects
 
 **Database Schema:**
+
 ```sql
 CREATE TABLE videos (
     id UUID PRIMARY KEY,
@@ -412,6 +431,7 @@ CREATE INDEX idx_videos_user_email ON videos(user_email);
 - Output: Cognito configuration JSON
 
 **Notes:**
+
 - All processing happens in Lambda's `/tmp` directory for speed optimization (no S3 intermediate files)
 - User emails are sanitized (e.g., `user@example.com` → `user_at_example.com`)
 
@@ -446,6 +466,8 @@ CREATE INDEX idx_videos_user_email ON videos(user_email);
 - **Cloudflare (External):** DNS management, CDN caching, SSL/TLS and DDoS protection
 - **CloudWatch:** Logging for all Lambda functions and Step Functions
 
+### Demo
+
+[![Watch the demo](https://img.youtube.com/vi/POunnIVAuI4/maxresdefault.jpg)](https://www.youtube.com/watch?v=POunnIVAuI4)
+
 > **NOTE:** This architecture is optimized for demonstration and cost management rather than production scale. For a production deployment serving thousands of concurrent users, the design would incorporate asynchronous processing with SQS, increased Lambda concurrency limits, WebSocket notifications, and additional caching layers.
-
-
