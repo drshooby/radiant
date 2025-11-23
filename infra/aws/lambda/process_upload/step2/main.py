@@ -36,9 +36,7 @@ def lambda_handler(event, context):
     # Process each frame with Rekognition
     kill_timestamps = []
     
-    for i, frame_file in enumerate(frame_files):
-        print(f"Processing frame {i+1}/{len(frame_files)}")
-        
+    for i, frame_file in enumerate(frame_files):        
         with open(frame_file, 'rb') as f:
             image_bytes = f.read()
         
@@ -63,7 +61,7 @@ def lambda_handler(event, context):
             raise RuntimeError("Model is not ready. Failing Lambda so Step Functions can retry or stop.") from e
 
         except Exception as e:
-            print(f"  Error processing frame {i}: {e}")
+            print(f"Error processing frame {i}: {e}")
     
     # Cleanup
     os.unlink(video_file)

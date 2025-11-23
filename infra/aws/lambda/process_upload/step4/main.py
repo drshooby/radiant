@@ -14,14 +14,14 @@ def pick_random_song(bucket, prefix="music/"):
         pages = list(paginator.paginate(Bucket=bucket, Prefix=prefix))
 
         if not pages:
-            print("No music pages found -- check s3.")
+            print("No music pages found - check s3.")
             return None
 
         # Pick a random page
         random_page = random.choice(pages)
         contents = random_page.get('Contents', [])
         if not contents:
-            print("No music page contents found -- check s3.")
+            print("No music page contents found - check s3.")
             return None
 
         # Pick a random object from that page
@@ -69,12 +69,8 @@ def lambda_handler(event, context):
         Now generate one commentary line:
     """
 
-    for i, clip in enumerate(clips):
-        print(f"\nProcessing clip {i + 1}/{len(clips)}: {clip['start']}s - {clip['end']}s")
-        
+    for i, clip in enumerate(clips):        
         # Step 1: Generate commentary with Bedrock
-        print("Generating commentary with Bedrock...")
-
         try:
             response = bedrock.invoke_model(
                 modelId='amazon.titan-text-express-v1',
@@ -90,13 +86,11 @@ def lambda_handler(event, context):
             response_body = json.loads(response['body'].read())
             commentary = response_body['results'][0]['outputText'].strip()
             commentary = commentary.split('\n')[-1].strip('"\'')
-            print(f"Commentary: {commentary}")
         except Exception as e:
             print(f"Bedrock error: {e}")
             commentary = "Nice play!"
 
         # Step 2: Generate audio with Polly
-        print("  Generating audio with Polly...")
         audio_file = f'/tmp/commentary_{i}.mp3'
 
         try:
@@ -126,9 +120,8 @@ def lambda_handler(event, context):
                 '-c', 'copy',
                 '-y', clip_file
             ], check=True, capture_output=True)
-            print(f"  Clip extracted to {clip_file}")
         except subprocess.CalledProcessError as e:
-            print(f"  ffmpeg extract error: {e.stderr.decode()}")
+            print(f"ffmpeg extract error: {e.stderr.decode()}")
             continue
 
         # Step 4: Overlay JUST the commentary audio (no music yet)
@@ -145,7 +138,6 @@ def lambda_handler(event, context):
                 '-shortest',
                 '-y', final_file
             ], check=True, capture_output=True)
-            print(f"  Clip with commentary created: {final_file}")
             
             clip_files.append(final_file)
         except subprocess.CalledProcessError as e:
@@ -161,7 +153,7 @@ def lambda_handler(event, context):
     video_filename = video_key.split('/')[-1]
     
     if len(clip_files) > 1:
-        print(f"\nConcatenating {len(clip_files)} clips with xfade transitions...")
+        print(f"Concatenating {len(clip_files)} clips with xfade transitions...")
         
         concatenated_file = '/tmp/concatenated.mp4'
         
@@ -273,9 +265,7 @@ def lambda_handler(event, context):
     music_file = None
     final_output = None
 
-    if concatenated_file:
-        print("\nAdding background music to final video...")
-        
+    if concatenated_file:        
         # Download background music
         music_key = pick_random_song(bucket)
         if music_key:
