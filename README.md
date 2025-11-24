@@ -466,7 +466,7 @@ CREATE INDEX idx_videos_user_email ON videos(user_email);
 - **Cloudflare (External):** DNS management, CDN caching, SSL/TLS and DDoS protection
 - **CloudWatch:** Logging for all Lambda functions and Step Functions
 
-### Demo
+## Demo
 
 - Check out a demo of Radiant in action (YouTube):
 
