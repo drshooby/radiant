@@ -177,8 +177,6 @@ cd scripts/
   - `deleteVideo`: Delete video and S3 objects
     - Body: `{ "operation": "deleteVideo", "videoId": string }`
 
-**CORS:** All endpoints currently support CORS with `Access-Control-Allow-Origin: *` (will be updated)
-
 ## Architecture Flow
 
 ```
@@ -469,4 +467,5 @@ CREATE INDEX idx_videos_user_email ON videos(user_email);
 [![Watch the demo](https://img.youtube.com/vi/POunnIVAuI4/maxresdefault.jpg)](https://www.youtube.com/watch?v=POunnIVAuI4)
 
 > **NOTE:** This architecture is optimized for demonstration and cost management rather than production scale. For a production deployment serving thousands of concurrent users, the design would incorporate asynchronous processing with SQS, increased Lambda concurrency limits, WebSocket notifications, and additional caching layers.
+
 
