@@ -152,27 +152,23 @@ cd scripts/
 ### `GET /cognito`
 
 - **Purpose:** Get Cognito configuration for frontend authentication
-- **Auth:** None
 - **Response:** Cognito client ID, domain, and endpoints
 
 ### `POST /get-upload-url`
 
 - **Purpose:** Get presigned S3 URL for video upload
-- **Auth:** Required (Cognito token)
 - **Body:** `{ "email": string, "filename": string, "contentType": string }`
 - **Response:** `{ "url": string, "key": string }`
 
 ### `POST /poll`
 
 - **Purpose:** Check Step Functions execution status
-- **Auth:** Required (Cognito token)
 - **Body:** `{ "executionArn": string }`
 - **Response:** `{ "status": string, "output": object }`
 
 ### `POST /videos`
 
 - **Purpose:** Database operations for video management
-- **Auth:** Required (Cognito token)
 - **Operations:**
   - `listVideos`: Get all videos for user
     - Body: `{ "operation": "listVideos", "userEmail": string }`
@@ -473,3 +469,4 @@ CREATE INDEX idx_videos_user_email ON videos(user_email);
 [![Watch the demo](https://img.youtube.com/vi/POunnIVAuI4/maxresdefault.jpg)](https://www.youtube.com/watch?v=POunnIVAuI4)
 
 > **NOTE:** This architecture is optimized for demonstration and cost management rather than production scale. For a production deployment serving thousands of concurrent users, the design would incorporate asynchronous processing with SQS, increased Lambda concurrency limits, WebSocket notifications, and additional caching layers.
+
