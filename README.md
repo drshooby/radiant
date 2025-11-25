@@ -185,6 +185,12 @@ cd scripts/
 
 ## Architecture Flow
 
+### Full Flow
+
+![Radiant Architecture Picture](./diagram/radiant-architecture.png)
+
+### Step Function Workflow
+
 ```
 S3 Upload → EventBridge → Start Step Function Lambda
                                ↓
