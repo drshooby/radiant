@@ -149,7 +149,7 @@ resource "aws_api_gateway_integration_response" "options_integration_responses" 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
     "method.response.header.Access-Control-Allow-Methods" = "'${join(",", concat(each.value.methods, ["OPTIONS"]))}'"
-    "method.response.header.Access-Control-Allow-Origin"  = "https://brutus.ettukube.com"
+    "method.response.header.Access-Control-Allow-Origin"  = "'https://brutus.ettukube.com'"
   }
 
   response_templates = {
