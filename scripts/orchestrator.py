@@ -17,8 +17,8 @@ def simple_load_env(filepath=".env"):
         value = value.strip().strip('\'"')
         os.environ[key] = value
   except FileNotFoundError:
-      print(f"Error: {filepath} not found. Using existing environment variables. Aborting.")
-      sys.exit(1)
+    print(f"Error: {filepath} not found. Using existing environment variables. Aborting.")
+    sys.exit(1)
 
 class Orchestrator():
   def __init__(self, start_stop_arn: str, describe_arn: str, region: str = "us-east-1"):
